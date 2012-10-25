@@ -12,29 +12,30 @@ from ella.core.cache import get_cached_objects, get_cached_object, SKIP
 from ella_flatcomments.signals import comment_was_moderated, comment_will_be_posted, comment_was_posted
 from ella_flatcomments.conf import comments_settings
 
+redis = Redis(**comments_settings.REDIS)
+
 class CommentList(object):
     def __init__(self, content_type, object_id, reversed=False):
         self._key = comments_settings.LIST_KEY % (Site.objects.get_current().id, content_type.id, object_id)
-        self._redis = Redis(**comments_settings.REDIS)
         self._reversed = reversed
 
     def count(self):
-        return self._redis.llen(self._key)
+        return redis.llen(self._key)
     __len__ = count
 
     def __getitem__(self, key):
         if isinstance(key, int):
-            return get_cached_object(FlatComment, pk=self._redis.lindex(self._key, key))
+            return get_cached_object(FlatComment, pk=redis.lindex(self._key, key))
 
         assert isinstance(key, slice) and isinstance(key.start, int) and isinstance(key.stop, int) and key.step is None
 
-        return get_cached_objects(self._redis.lrange(self._key, key.start, key.stop - 1), model=FlatComment, missing=SKIP)
+        return get_cached_objects(redis.lrange(self._key, key.start, key.stop - 1), model=FlatComment, missing=SKIP)
 
     def add_comment(self, comment):
-        self._redis.lpush(self._key, comment.id)
+        redis.lpush(self._key, comment.id)
 
     def remove_comment(self, comment):
-        self._redis.lrem(self._key, 0, comment.id)
+        redis.lrem(self._key, 0, comment.id)
 
 class CommentManager(models.Manager):
     def post_comment(self, comment, request):
