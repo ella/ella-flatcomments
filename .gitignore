@@ -2,4 +2,4 @@
 *~
 *.py[co]
 .coverage
-ella-flatcomments.egg-info
+ella_flatcomments.egg-info
