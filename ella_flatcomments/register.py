@@ -1,8 +1,10 @@
 from ella.core.models import Listing, Publishable
 from ella.core.cache.redis import SlidingListingHandler
+from ella.core.signals import content_published, content_unpublished
 
 from ella_flatcomments.conf import comments_settings
 from ella_flatcomments.models import CommentList
+from ella_flatcomments.signals import comment_was_posted, comment_was_moderated
 
 LISTING_HANDLERS = None
 
@@ -51,3 +53,9 @@ def publishable_published(publishable, delta=0, **kwargs):
         else:
             lh.add_publishable(publishable.category, publishable, pipe=pipe, commit=False)
     pipe.execute()
+
+content_published.connect(publishable_published)
+content_unpublished.connect(publishable_unpublished)
+
+comment_was_posted.connect(comment_posted)
+comment_was_moderated.connect(comment_moderated)
