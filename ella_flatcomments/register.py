@@ -3,7 +3,6 @@ from ella.core.cache.redis import SlidingListingHandler
 from ella.core.signals import content_published, content_unpublished
 
 from ella_flatcomments.conf import comments_settings
-from ella_flatcomments.models import CommentList
 from ella_flatcomments.signals import comment_was_posted, comment_was_moderated
 
 LISTING_HANDLERS = None
@@ -16,9 +15,6 @@ def _get_listing_handlers():
 
 
 def comment_moderated(comment, user, **kwargs):
-    # remove comment from redis
-    CommentList(comment.content_type, comment.object_id).remove_comment(comment)
-
     # update the listing handlers
     obj = comment.content_object
     if isinstance(obj, Publishable) and obj.is_published():
@@ -26,9 +22,6 @@ def comment_moderated(comment, user, **kwargs):
 
 
 def comment_posted(comment, request, **kwargs):
-    # add comment to redis
-    CommentList(comment.content_type, comment.object_id).add_comment(comment)
-
     # update the listing handlers
     obj = comment.content_object
     if isinstance(obj, Publishable) and obj.is_published():

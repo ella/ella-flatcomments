@@ -49,6 +49,8 @@ class CommentManager(models.Manager):
             if response == False:
                 return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
         comment.save(force_insert=True)
+        # add comment to redis
+        CommentList(comment.content_type, comment.object_id).add_comment(comment)
         responses = comment_was_posted(self.model, comment=comment, request=request)
         return True, None
 
@@ -60,6 +62,8 @@ class CommentManager(models.Manager):
             return
         comment.is_public = False
         self.filter(pk=comment.pk).update(is_public=False)
+        # remove comment from redis
+        CommentList(comment.content_type, comment.object_id).remove_comment(comment)
         comment_was_moderated.send(self.model, comment=comment, user=user)
 
 
