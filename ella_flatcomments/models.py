@@ -24,11 +24,11 @@ class CommentList(object):
 
     def __getitem__(self, key):
         if isinstance(key, int):
-            return get_cached_object(Comment, pk=self._redis.lindex(self._key, key))
+            return get_cached_object(FlatComment, pk=self._redis.lindex(self._key, key))
 
         assert isinstance(key, slice) and isinstance(key.start, int) and isinstance(key.stop, int) and key.step is None
 
-        return get_cached_objects(self._redis.lrange(self._key, key.start, key.stop - 1), model=Comment, missing=SKIP)
+        return get_cached_objects(self._redis.lrange(self._key, key.start, key.stop - 1), model=FlatComment, missing=SKIP)
 
     def add_comment(self, comment):
         self._redis.lpush(self._key, comment.id)
@@ -67,7 +67,7 @@ class CommentManager(models.Manager):
         comment_was_moderated.send(self.model, comment=comment, user=user)
 
 
-class Comment(models.Model):
+class FlatComment(models.Model):
     site = SiteForeignKey(default=Site.objects.get_current)
 
     content_type = ContentTypeForeignKey()
