@@ -1,3 +1,4 @@
 Django
 ella>=3.0.3
 redis
+django-appdata>=0.1.0
