@@ -1,6 +1,6 @@
 DEBUG = True
 
-ROOT_URLCONF = 'test_APP_NAME.urls'
+ROOT_URLCONF = 'test_ella_flatcomments.urls'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
@@ -41,5 +41,5 @@ INSTALLED_APPS = (
     'django.contrib.redirects',
     'django.contrib.admin',
 
-    'APP_NAME',
+    'ella_flatcomments',
 )

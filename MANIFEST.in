@@ -7,9 +7,9 @@ include README
 include dev_requirements.txt
 include requirements.txt
 recursive-include doc *
-recursive-include test_APP_NAME *
-recursive-include APP_NAME/*/locale *
-recursive-include APP_NAME/*/templates *
+recursive-include test_ella_flatcomments *
+recursive-include ella_flatcomments/*/locale *
+recursive-include ella_flatcomments/*/templates *
 
 global-exclude .coverage
-exclude test_APP_NAME/settings/local.py
+exclude test_ella_flatcomments/settings/local.py
