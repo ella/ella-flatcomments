@@ -40,12 +40,20 @@ class TestRedisDenormalizations(CommentTestCase):
         tools.assert_equals(['comments:1:%s:1' % self.content_type.pk], self.redis.keys('*'))
         tools.assert_equals([str(c.pk)], self.redis.lrange('comments:1:%s:1' % self.content_type.pk, 0, -1))
 
-    def test_delete_removes_comment_id_from_redis(self):
+    def test_moderate_removes_comment_id_from_redis(self):
         c = self._get_comment()
         c.save()
         self.redis.lpush('comments:1:%s:1' % self.content_type.pk, c.pk)
 
         FlatComment.objects.moderate_comment(c, self.user)
+        tools.assert_equals([], self.redis.keys('*'))
+
+    def test_delete_removes_comment_id_from_redis(self):
+        c = self._get_comment()
+        c.save()
+        self.redis.lpush('comments:1:%s:1' % self.content_type.pk, c.pk)
+        c.delete()
+
         tools.assert_equals([], self.redis.keys('*'))
 
 class TestCommentList(CommentTestCase):
