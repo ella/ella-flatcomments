@@ -85,3 +85,9 @@ class TestCommentList(CommentTestCase):
     def test_get_last_comment(self):
         tools.assert_equals(10, self.comment_list.last_comment())
 
+    def test_slice(self):
+        clist = range(11)
+        clist.reverse()
+        tools.assert_equals(clist[0:4], self.comment_list[0:4])
+        tools.assert_equals(clist[2:6], self.comment_list[2:6])
+        tools.assert_equals(clist[2:60], self.comment_list[2:60])
