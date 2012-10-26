@@ -1,6 +1,8 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 
+from ella.core.cache.utils import SKIP
+
 from ella_flatcomments.models import FlatComment, CommentList
 
 from test_ella_flatcomments.cases import RedisTestCase
@@ -58,8 +60,9 @@ class TestCommentList(CommentTestCase):
         tools.assert_equals(FlatComment, model)
         return int(pk)
 
-    def _get_cached_objects(self, pks, model, **kwargs):
+    def _get_cached_objects(self, pks, model, missing):
         tools.assert_equals(FlatComment, model)
+        tools.assert_equals(SKIP, missing)
         return map(int, pks)
 
     def setUp(self):
