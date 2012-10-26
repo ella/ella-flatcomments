@@ -53,9 +53,6 @@ class TestCommentList(CommentTestCase):
         self.addCleanup(patcher.stop)
         return mocked
 
-    def _fake_comments(self, count):
-        for x in xrange(count):
-            self.redis.lpush(self.key, x)
 
     def _get_cached_object(self, model, pk):
         tools.assert_equals(FlatComment, model)
@@ -69,7 +66,8 @@ class TestCommentList(CommentTestCase):
         super(TestCommentList, self).setUp()
         self.comment_list = CommentList(self.content_type, 1)
         self.key = 'comments:1:%s:1' % self.content_type.pk
-        self._fake_comments(11)
+        for x in xrange(11):
+            self.redis.lpush(self.key, x)
 
         self.get_cached_object = self._patch('ella_flatcomments.models.get_cached_object', self._get_cached_object)
         self.get_cached_objects = self._patch('ella_flatcomments.models.get_cached_objects', self._get_cached_objects)
@@ -82,6 +80,10 @@ class TestCommentList(CommentTestCase):
         for i, c in zip(xrange(11), reversed(xrange(11))):
             tools.assert_equals(c, self.comment_list[i])
 
+    def test_last_comment_returns_none_on_no_comment(self):
+        self.redis.delete(self.key)
+        tools.assert_equals(None, self.comment_list.last_comment())
+
     def test_get_last_comment(self):
         tools.assert_equals(10, self.comment_list.last_comment())
 
@@ -91,3 +93,4 @@ class TestCommentList(CommentTestCase):
         tools.assert_equals(clist[0:4], self.comment_list[0:4])
         tools.assert_equals(clist[2:6], self.comment_list[2:6])
         tools.assert_equals(clist[2:60], self.comment_list[2:60])
+

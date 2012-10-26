@@ -26,7 +26,10 @@ class CommentList(object):
 
     def __getitem__(self, key):
         if isinstance(key, int):
-            return get_cached_object(FlatComment, pk=redis.lindex(self._key, key))
+            pk = redis.lindex(self._key, key)
+            if pk is None:
+                raise IndexError('list index out of range')
+            return get_cached_object(FlatComment, pk=pk)
 
         assert isinstance(key, slice) and isinstance(key.start, int) and isinstance(key.stop, int) and key.step is None
 
