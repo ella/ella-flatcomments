@@ -32,6 +32,12 @@ class CommentList(object):
 
         return get_cached_objects(redis.lrange(self._key, key.start, key.stop - 1), model=FlatComment, missing=SKIP)
 
+    def last_comment(self):
+        try:
+            return self[0]
+        except IndexError:
+            return None
+
     def add_comment(self, comment):
         redis.lpush(self._key, comment.id)
 
