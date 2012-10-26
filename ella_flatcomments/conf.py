@@ -10,4 +10,6 @@ LISTING_HANDLERS = (MOST_COMMENTED_LH, RECENTLY_COMMENTED_LH, LAST_COMMENTED_LH)
 # redis client kwargs
 REDIS = {}
 
+LIST_KEY = 'comments:%s:%s:%s'
+
 comments_settings = Settings('ella_flatcomments.conf', 'COMMENTS')

@@ -1,4 +1,4 @@
-from redis import Redis
+from redis import StrictRedis
 
 from django.db import models
 from django.contrib.sites.models import Site
@@ -8,11 +8,12 @@ from app_data import AppDataField
 
 from ella.core.cache.fields import ContentTypeForeignKey, CachedGenericForeignKey, SiteForeignKey, CachedForeignKey
 from ella.core.cache import get_cached_objects, get_cached_object, SKIP
+from ella.utils import timezone
 
 from ella_flatcomments.signals import comment_was_moderated, comment_will_be_posted, comment_was_posted
 from ella_flatcomments.conf import comments_settings
 
-redis = Redis(**comments_settings.REDIS)
+redis = StrictRedis(**comments_settings.REDIS)
 
 class CommentList(object):
     def __init__(self, content_type, object_id, reversed=False):
@@ -45,14 +46,14 @@ class CommentManager(models.Manager):
 
         Return error boolean and reason for error, if any.
         """
-        responses = comment_will_be_posted(self.model, comment=comment, request=request)
+        responses = comment_will_be_posted.send(self.model, comment=comment, request=request)
         for (receiver, response) in responses:
             if response == False:
                 return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
         comment.save(force_insert=True)
         # add comment to redis
         CommentList(comment.content_type, comment.object_id).add_comment(comment)
-        responses = comment_was_posted(self.model, comment=comment, request=request)
+        responses = comment_was_posted.send(self.model, comment=comment, request=request)
         return True, None
 
     def moderate_comment(self, comment, user):
@@ -77,7 +78,7 @@ class FlatComment(models.Model):
 
     content = models.TextField()
 
-    submit_date = models.DateTimeField()
+    submit_date = models.DateTimeField(default=None)
     user = CachedForeignKey(User)
     is_public = models.BooleanField(default=True)
 
@@ -85,3 +86,11 @@ class FlatComment(models.Model):
 
     objects = CommentManager()
 
+    def delete(self):
+        CommentList(self.content_type, self.object_id).remove_comment(self)
+        super(FlatComment, self).delete()
+
+    def save(self, **kwargs):
+        if self.submit_date is None:
+            self.submit_date = timezone.now()
+        super(FlatComment, self).save(**kwargs)

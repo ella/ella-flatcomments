@@ -46,3 +46,7 @@ INSTALLED_APPS = (
 
     'ella_flatcomments',
 )
+
+SITE_ID = 1
+
+REDIS = COMMENTS_REDIS = {}
