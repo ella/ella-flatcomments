@@ -16,7 +16,7 @@ class CommentTestCase(RedisTestCase):
         super(CommentTestCase, self).setUp()
         self.content_object = ContentType.objects.get(pk=1)
         self.content_type = ContentType.objects.get_for_model(ContentType)
-        self.user = User.objects.create_user('some_user')
+        self.user = User.objects.create_user('some_user', 'user@example.com')
 
     def _get_comment(self, commit=False, **kwargs):
         defaults = dict(
