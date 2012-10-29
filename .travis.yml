@@ -15,4 +15,4 @@ script: python setup.py test
 matrix:
     exclude:
        - python: "2.5"
-         env: DJANGO_VERSION="dev"
+         env: DJANGO_VERSION=dev
