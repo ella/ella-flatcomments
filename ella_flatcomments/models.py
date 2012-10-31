@@ -37,10 +37,7 @@ class CommentList(object):
 
         if self._reversed:
             cnt = self.count()
-            start, stop = key.start, key.stop
-            start = cnt - start
-            stop = cnt - stop
-            pks = reversed(redis.lrange(self._key, stop, start - 1))
+            pks = reversed(redis.lrange(self._key, cnt - key.stop, cnt - key.start - 1))
         else:
             pks = redis.lrange(self._key, key.start, key.stop - 1)
 
