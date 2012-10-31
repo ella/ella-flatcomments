@@ -1,36 +1,12 @@
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import User
-
 from ella.core.cache.utils import SKIP
 
 from ella_flatcomments.models import FlatComment, CommentList
 
-from test_ella_flatcomments.cases import RedisTestCase
+from test_ella_flatcomments.cases import CommentTestCase
 
 from nose import tools
 from mock import patch, DEFAULT
 
-
-class CommentTestCase(RedisTestCase):
-    def setUp(self):
-        super(CommentTestCase, self).setUp()
-        self.content_object = ContentType.objects.get(pk=1)
-        self.content_type = ContentType.objects.get_for_model(ContentType)
-        self.user = User.objects.create_user('some_user', 'user@example.com')
-
-    def _get_comment(self, commit=False, **kwargs):
-        defaults = dict(
-            content_type=self.content_type,
-            object_id=self.content_object.pk,
-            user=self.user,
-            content=''
-        )
-        defaults.update(kwargs)
-
-        c = FlatComment(**defaults)
-        if commit:
-            c.save()
-        return c
 
 class TestRedisDenormalizations(CommentTestCase):
     def test_comment_id_is_pushed_to_redis_list(self):
