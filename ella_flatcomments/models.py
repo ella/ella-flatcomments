@@ -26,6 +26,8 @@ class CommentList(object):
 
     def __getitem__(self, key):
         if isinstance(key, int):
+            if self._reversed:
+                key = -1 - key
             pk = redis.lindex(self._key, key)
             if pk is None:
                 raise IndexError('list index out of range')
@@ -33,7 +35,16 @@ class CommentList(object):
 
         assert isinstance(key, slice) and isinstance(key.start, int) and isinstance(key.stop, int) and key.step is None
 
-        return get_cached_objects(redis.lrange(self._key, key.start, key.stop - 1), model=FlatComment, missing=SKIP)
+        if self._reversed:
+            cnt = self.count()
+            start, stop = key.start, key.stop
+            start = cnt - start
+            stop = cnt - stop
+            pks = reversed(redis.lrange(self._key, stop, start - 1))
+        else:
+            pks = redis.lrange(self._key, key.start, key.stop - 1)
+
+        return get_cached_objects(pks, model=FlatComment, missing=SKIP)
 
     def last_comment(self):
         try:
@@ -97,6 +108,8 @@ class FlatComment(models.Model):
 
     def delete(self):
         CommentList(self.content_type, self.object_id).remove_comment(self)
+        if self.is_public:
+            comment_was_moderated.send(self.__class__, comment=self, user=None)
         super(FlatComment, self).delete()
 
     def save(self, **kwargs):

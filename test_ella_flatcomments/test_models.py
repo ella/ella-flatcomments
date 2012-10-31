@@ -91,6 +91,11 @@ class TestCommentList(CommentTestCase):
         for i, c in zip(xrange(11), reversed(xrange(11))):
             tools.assert_equals(c, self.comment_list[i])
 
+    def test_reversed_getitem(self):
+        comment_list = CommentList(self.content_type, 1, reversed=True)
+        for i, c in zip(xrange(11), xrange(11)):
+            tools.assert_equals(c, comment_list[i])
+
     def test_last_comment_returns_none_on_no_comment(self):
         self.redis.delete(self.key)
         tools.assert_equals(None, self.comment_list.last_comment())
@@ -104,4 +109,11 @@ class TestCommentList(CommentTestCase):
         tools.assert_equals(clist[0:4], self.comment_list[0:4])
         tools.assert_equals(clist[2:6], self.comment_list[2:6])
         tools.assert_equals(clist[2:60], self.comment_list[2:60])
+
+    def test_reversed_slice(self):
+        comment_list = CommentList(self.content_type, 1, reversed=True)
+        clist = range(11)
+        tools.assert_equals(clist[0:4], comment_list[0:4])
+        tools.assert_equals(clist[2:6], comment_list[2:6])
+        tools.assert_equals(clist[2:60], comment_list[2:60])
 
