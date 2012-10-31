@@ -45,11 +45,11 @@ class PublishableTestCase(CommentTestCase):
         create_basic_categories(self)
         create_and_place_a_publishable(self)
 
-    def _create_comment(self, commit=False, **kwargs):
+    def _get_comment(self, commit=False, **kwargs):
         defaults = {
             'content_type': self.publishable.content_type,
             'object_id': self.publishable.pk
         }
         defaults.update(kwargs)
-        return super(PublishableTestCase, self)._create_comment(commit=commit, **defaults)
+        return super(PublishableTestCase, self)._get_comment(commit=commit, **defaults)
 
