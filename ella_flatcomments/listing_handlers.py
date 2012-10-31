@@ -13,7 +13,10 @@ class MostCommentedListingHandler(RedisListingHandler):
     def add_publishable(cls, category, publishable, score=None, pipe=None, commit=True):
         if score is None:
             score = CommentList(publishable.content_type, publishable.pk).count()
-        super(MostCommentedListingHandler, cls).add_publishable(category, publishable, score, pipe=pipe, commit=commit)
+            # no comments yet, pass
+            if not score:
+                return pipe
+        return super(MostCommentedListingHandler, cls).add_publishable(category, publishable, score, pipe=pipe, commit=commit)
 
 
 class LastCommentedListingHandler(TimeBasedListingHandler):
@@ -22,6 +25,10 @@ class LastCommentedListingHandler(TimeBasedListingHandler):
     @classmethod
     def add_publishable(cls, category, publishable, score=None, publish_from=None, pipe=None, commit=True):
         if score is None and publish_from is None:
-            publish_from = CommentList(publishable.content_type, publishable.pk)[0].submit_date
-        super(LastCommentedListingHandler, cls).add_publishable(category, publishable, score=score, publish_from=publish_from, pipe=pipe, commit=commit)
+            try:
+                publish_from = CommentList(publishable.content_type, publishable.pk)[0].submit_date
+            except IndexError:
+                # no comment yet, pass
+                return pipe
+        return super(LastCommentedListingHandler, cls).add_publishable(category, publishable, score=score, publish_from=publish_from, pipe=pipe, commit=commit)
 

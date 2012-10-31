@@ -33,8 +33,9 @@ def publishable_unpublished(publishable, **kwargs):
     for lh in _get_listing_handlers():
         if issubclass(lh, SlidingListingHandler):
             continue
-        lh.remove_publishable(publishable.category, publishable, pipe=pipe, commit=False)
-    pipe.execute()
+        pipe = lh.remove_publishable(publishable.category, publishable, pipe=pipe, commit=False)
+    if pipe:
+        pipe.execute()
 
 
 def publishable_published(publishable, delta=0, **kwargs):
@@ -42,10 +43,11 @@ def publishable_published(publishable, delta=0, **kwargs):
     for lh in _get_listing_handlers():
         if issubclass(lh, SlidingListingHandler):
             if delta != 0:
-                lh.incr_score(publishable.category, publishable, incr_by=delta, pipe=pipe, commit=False)
+                pipe = lh.incr_score(publishable.category, publishable, incr_by=delta, pipe=pipe, commit=False)
         else:
-            lh.add_publishable(publishable.category, publishable, pipe=pipe, commit=False)
-    pipe.execute()
+            pipe = lh.add_publishable(publishable.category, publishable, pipe=pipe, commit=False)
+    if pipe:
+        pipe.execute()
 
 content_published.connect(publishable_published)
 content_unpublished.connect(publishable_unpublished)

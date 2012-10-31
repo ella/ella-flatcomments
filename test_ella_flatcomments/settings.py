@@ -43,10 +43,19 @@ INSTALLED_APPS = (
 
     'ella.core',
     'ella.photos',
+    'ella.articles',
 
     'ella_flatcomments',
 )
 
 SITE_ID = 1
 
-REDIS = COMMENTS_REDIS = {}
+LISTING_HANDLERS = {
+    'default': 'ella.core.cache.redis.TimeBasedListingHandler',
+
+    'most_commented': 'ella_flatcomments.listing_handlers.MostCommentedListingHandler',
+    'recent_comcount': 'ella_flatcomments.listing_handlers.RecentMostCommentedListingHandler',
+    'last_commented': 'ella_flatcomments.listing_handlers.LastCommentedListingHandler',
+}
+USE_REDIS_FOR_LISTINGS = True
+LISTINGS_REDIS = REDIS = COMMENTS_REDIS = {}

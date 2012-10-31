@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 
+from ella.utils.test_helpers import create_basic_categories, create_and_place_a_publishable
+
 from ella_flatcomments.models import FlatComment
 
 class RedisTestCase(TestCase):
@@ -36,3 +38,18 @@ class CommentTestCase(RedisTestCase):
         if commit:
             c.save()
         return c
+
+class PublishableTestCase(CommentTestCase):
+    def setUp(self):
+        super(PublishableTestCase, self).setUp()
+        create_basic_categories(self)
+        create_and_place_a_publishable(self)
+
+    def _create_comment(self, commit=False, **kwargs):
+        defaults = {
+            'content_type': self.publishable.content_type,
+            'object_id': self.publishable.pk
+        }
+        defaults.update(kwargs)
+        return super(PublishableTestCase, self)._create_comment(commit=commit, **defaults)
+
