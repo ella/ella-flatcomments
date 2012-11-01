@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.models import ContentType
+
 from ella.core.cache.utils import SKIP
 
 from ella_flatcomments.models import FlatComment, CommentList
@@ -31,6 +33,21 @@ class TestRedisDenormalizations(CommentTestCase):
         c.delete()
 
         tools.assert_equals([], self.redis.keys('*'))
+
+class TestCommentManager(CommentTestCase):
+    def test_get_comment_raises_does_not_exist_on_mismatched_content_object(self):
+        c = self._get_comment()
+        FlatComment.objects.post_comment(c, None)
+
+        clist = CommentList.for_object(ContentType.objects.get(pk=2))
+        tools.assert_raises(FlatComment.DoesNotExist, clist.get_comment, c.pk)
+
+    def test_get_comment_works(self):
+        c = self._get_comment()
+        FlatComment.objects.post_comment(c, None)
+
+        clist = CommentList.for_object(self.content_object)
+        tools.assert_equals(c, clist.get_comment(c.pk))
 
 class TestCommentList(CommentTestCase):
     def _patch(self, path, new=DEFAULT):

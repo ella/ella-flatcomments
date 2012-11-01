@@ -1,6 +1,7 @@
 from redis import StrictRedis
 
 from django.db import models
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.contrib.auth.models import User
 
@@ -16,7 +17,18 @@ from ella_flatcomments.conf import comments_settings
 redis = StrictRedis(**comments_settings.REDIS)
 
 class CommentList(object):
+    @classmethod
+    def for_object(cls, content_object):
+        if hasattr(content_object, 'content_type'):
+            ct = content_object.content_type
+        else:
+            ct = ContentType.objects.get_for_model(content_object)
+        return cls(ct, content_object.pk)
+
     def __init__(self, content_type, object_id, reversed=False):
+        self.ct_id = content_type.id
+        self.obj_id = object_id
+
         self._key = comments_settings.LIST_KEY % (Site.objects.get_current().id, content_type.id, object_id)
         self._reversed = reversed
 
@@ -48,6 +60,12 @@ class CommentList(object):
             return self[0]
         except IndexError:
             return None
+
+    def get_comment(self, comment_id):
+        c = get_cached_object(FlatComment, pk=comment_id)
+        if c.content_type_id != self.ct_id or c.object_id != self.obj_id or Site.objects.get_current() != c.site:
+            raise FlatComment.DoesNotExist()
+        return c
 
     def add_comment(self, comment):
         redis.lpush(self._key, comment.id)
