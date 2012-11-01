@@ -31,8 +31,6 @@ def comment_posted(comment, request, **kwargs):
 def publishable_unpublished(publishable, **kwargs):
     pipe = None
     for lh in _get_listing_handlers():
-        if issubclass(lh, SlidingListingHandler):
-            continue
         pipe = lh.remove_publishable(publishable.category, publishable, pipe=pipe, commit=False)
     if pipe:
         pipe.execute()
