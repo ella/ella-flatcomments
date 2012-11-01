@@ -73,7 +73,6 @@ class CommentList(object):
     def remove_comment(self, comment):
         redis.lrem(self._key, 0, comment.id)
 
-class CommentManager(models.Manager):
     def post_comment(self, comment, request):
         """
         Post comment, fire of all the signals connected to that event and see
@@ -81,14 +80,14 @@ class CommentManager(models.Manager):
 
         Return error boolean and reason for error, if any.
         """
-        responses = comment_will_be_posted.send(self.model, comment=comment, request=request)
+        responses = comment_will_be_posted.send(FlatComment, comment=comment, request=request)
         for (receiver, response) in responses:
             if response == False:
                 return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
         comment.save(force_insert=True)
         # add comment to redis
         CommentList(comment.content_type, comment.object_id).add_comment(comment)
-        responses = comment_was_posted.send(self.model, comment=comment, request=request)
+        responses = comment_was_posted.send(FlatComment, comment=comment, request=request)
         return True, None
 
     def moderate_comment(self, comment, user):
@@ -98,10 +97,10 @@ class CommentManager(models.Manager):
         if not comment.is_public:
             return
         comment.is_public = False
-        self.filter(pk=comment.pk).update(is_public=False)
+        FlatComment.objects.filter(pk=comment.pk).update(is_public=False)
         # remove comment from redis
         CommentList(comment.content_type, comment.object_id).remove_comment(comment)
-        comment_was_moderated.send(self.model, comment=comment, user=user)
+        comment_was_moderated.send(FlatComment, comment=comment, user=user)
 
 
 class FlatComment(models.Model):
@@ -118,8 +117,6 @@ class FlatComment(models.Model):
     is_public = models.BooleanField(default=True)
 
     app_data = AppDataField()
-
-    objects = CommentManager()
 
     def delete(self):
         CommentList(self.content_type, self.object_id).remove_comment(self)

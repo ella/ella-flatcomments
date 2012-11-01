@@ -3,7 +3,6 @@ from datetime import datetime
 from ella.core.models import Listing
 
 from ella_flatcomments.conf import comments_settings
-from ella_flatcomments.models import FlatComment
 
 from test_ella_flatcomments.cases import PublishableTestCase
 
@@ -29,7 +28,7 @@ class TestListingHandlers(PublishableTestCase):
     def test_last_commented_finds_the_publishable_with_comments_time(self):
         submit_date = datetime(2010, 10, 10)
         c = self._get_comment(submit_date=submit_date)
-        FlatComment.objects.post_comment(c, None)
+        self.comment_list.post_comment(c, None)
 
         lh = Listing.objects.get_queryset_wrapper(self.category_nested, source=comments_settings.LAST_COMMENTED_LH)
 

@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 from ella.utils.test_helpers import create_basic_categories, create_and_place_a_publishable
 
-from ella_flatcomments.models import FlatComment
+from ella_flatcomments.models import FlatComment, CommentList
 
 class RedisTestCase(TestCase):
     def setUp(self):
@@ -24,6 +24,7 @@ class CommentTestCase(RedisTestCase):
         self.content_object = ContentType.objects.get(pk=1)
         self.content_type = ContentType.objects.get_for_model(ContentType)
         self.user = User.objects.create_user('some_user', 'user@example.com')
+        self.comment_list = CommentList.for_object(self.content_object)
 
     def _get_comment(self, commit=False, **kwargs):
         defaults = dict(

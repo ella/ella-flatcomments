@@ -13,7 +13,7 @@ from mock import patch, DEFAULT
 class TestRedisDenormalizations(CommentTestCase):
     def test_comment_id_is_pushed_to_redis_list(self):
         c = self._get_comment()
-        FlatComment.objects.post_comment(c, None)
+        self.comment_list.post_comment(c, None)
 
         tools.assert_equals(['comments:1:%s:1' % self.content_type.pk], self.redis.keys('*'))
         tools.assert_equals([str(c.pk)], self.redis.lrange('comments:1:%s:1' % self.content_type.pk, 0, -1))
@@ -23,7 +23,7 @@ class TestRedisDenormalizations(CommentTestCase):
         c.save()
         self.redis.lpush('comments:1:%s:1' % self.content_type.pk, c.pk)
 
-        FlatComment.objects.moderate_comment(c, self.user)
+        self.comment_list.moderate_comment(c, self.user)
         tools.assert_equals([], self.redis.keys('*'))
 
     def test_delete_removes_comment_id_from_redis(self):
@@ -37,14 +37,14 @@ class TestRedisDenormalizations(CommentTestCase):
 class TestCommentManager(CommentTestCase):
     def test_get_comment_raises_does_not_exist_on_mismatched_content_object(self):
         c = self._get_comment()
-        FlatComment.objects.post_comment(c, None)
+        self.comment_list.post_comment(c, None)
 
         clist = CommentList.for_object(ContentType.objects.get(pk=2))
         tools.assert_raises(FlatComment.DoesNotExist, clist.get_comment, c.pk)
 
     def test_get_comment_works(self):
         c = self._get_comment()
-        FlatComment.objects.post_comment(c, None)
+        self.comment_list.post_comment(c, None)
 
         clist = CommentList.for_object(self.content_object)
         tools.assert_equals(c, clist.get_comment(c.pk))
@@ -68,7 +68,6 @@ class TestCommentList(CommentTestCase):
 
     def setUp(self):
         super(TestCommentList, self).setUp()
-        self.comment_list = CommentList(self.content_type, 1)
         self.key = 'comments:1:%s:1' % self.content_type.pk
         for x in xrange(11):
             self.redis.lpush(self.key, x)
