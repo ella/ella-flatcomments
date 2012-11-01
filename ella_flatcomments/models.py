@@ -61,10 +61,15 @@ class CommentList(object):
         except IndexError:
             return None
 
+    def _verify_own(self, comment):
+        return  comment.content_type_id == self.ct_id and\
+                comment.object_id == self.obj_id and \
+                Site.objects.get_current() == comment.site
+
 
     def get_comment(self, comment_id):
         c = get_cached_object(FlatComment, pk=comment_id)
-        if c.content_type_id != self.ct_id or c.object_id != self.obj_id or Site.objects.get_current() != c.site:
+        if not self._verify_own(c):
             raise FlatComment.DoesNotExist()
         return c
 
@@ -75,6 +80,7 @@ class CommentList(object):
 
         Return error boolean and reason for error, if any.
         """
+        assert self._verify_own(comment)
         responses = comment_will_be_posted.send(FlatComment, comment=comment, request=request)
         for (receiver, response) in responses:
             if response == False:
@@ -89,6 +95,7 @@ class CommentList(object):
         """
         Mark some comment as moderated and fire a signal to make other apps aware of this
         """
+        assert self._verify_own(comment)
         if not comment.is_public:
             return
         comment.is_public = False
