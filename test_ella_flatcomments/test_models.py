@@ -16,6 +16,14 @@ class TestURL(PublishableTestCase):
 
         tools.assert_equals(self.publishable.get_absolute_url() + 'comments/?p=1', c.get_absolute_url())
 
+    def test_third_comment_on_second_page(self):
+        comments = [self._get_comment() for _ in range(3)]
+        for c in comments:
+            self.comment_list.post_comment(c, None)
+
+        tools.assert_equals(self.publishable.get_absolute_url() + 'comments/?p=2', comments[0].get_absolute_url())
+        tools.assert_equals(self.publishable.get_absolute_url() + 'comments/?p=1', comments[1].get_absolute_url())
+
 class TestRedisDenormalizations(CommentTestCase):
     def test_comment_id_is_pushed_to_redis_list(self):
         c = self._get_comment()
