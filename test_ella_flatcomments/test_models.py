@@ -4,11 +4,17 @@ from ella.core.cache.utils import SKIP
 
 from ella_flatcomments.models import FlatComment, CommentList
 
-from test_ella_flatcomments.cases import CommentTestCase
+from test_ella_flatcomments.cases import CommentTestCase, PublishableTestCase
 
 from nose import tools
 from mock import patch, DEFAULT
 
+class TestURL(PublishableTestCase):
+    def test_first_comment_points_to_first_page(self):
+        c = self._get_comment()
+        self.comment_list.post_comment(c, None)
+
+        tools.assert_equals(self.publishable.get_absolute_url() + 'comments/?p=1', c.get_absolute_url())
 
 class TestRedisDenormalizations(CommentTestCase):
     def test_comment_id_is_pushed_to_redis_list(self):

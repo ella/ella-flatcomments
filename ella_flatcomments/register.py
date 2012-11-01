@@ -1,11 +1,19 @@
+from django.template.defaultfilters import slugify
+from django.utils.translation import ugettext as _
+
 from ella.core.models import Listing, Publishable
 from ella.core.cache.redis import SlidingListingHandler
 from ella.core.signals import content_published, content_unpublished
+from ella.core.custom_urls import resolver
 
+from ella_flatcomments.urls import urlpatterns
 from ella_flatcomments.conf import comments_settings
 from ella_flatcomments.signals import comment_was_posted, comment_was_moderated
 
 LISTING_HANDLERS = None
+
+# register custom url patterns
+resolver.register(urlpatterns, prefix=slugify(_('comments')))
 
 def _get_listing_handlers():
     global LISTING_HANDLERS

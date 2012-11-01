@@ -6,5 +6,5 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^', include('ella_flatcomments.urls')),
+    url(r'^', include('ella.core.urls')),
 ) + staticfiles_urlpatterns()

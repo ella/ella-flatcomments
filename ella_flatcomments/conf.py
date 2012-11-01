@@ -12,4 +12,6 @@ REDIS = {}
 
 LIST_KEY = 'comments:%s:%s:%s'
 
+PAGINATE_BY = 10
+
 comments_settings = Settings('ella_flatcomments.conf', 'COMMENTS')

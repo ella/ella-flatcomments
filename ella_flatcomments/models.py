@@ -9,6 +9,7 @@ from app_data import AppDataField
 
 from ella.core.cache.fields import ContentTypeForeignKey, CachedGenericForeignKey, SiteForeignKey, CachedForeignKey
 from ella.core.cache import get_cached_objects, get_cached_object, SKIP
+from ella.core.custom_urls import resolver
 from ella.utils import timezone
 
 from ella_flatcomments.signals import comment_was_moderated, comment_will_be_posted, comment_was_posted
@@ -18,12 +19,12 @@ redis = StrictRedis(**comments_settings.REDIS)
 
 class CommentList(object):
     @classmethod
-    def for_object(cls, content_object):
+    def for_object(cls, content_object, reversed=False):
         if hasattr(content_object, 'content_type'):
             ct = content_object.content_type
         else:
             ct = ContentType.objects.get_for_model(content_object)
-        return cls(ct, content_object.pk)
+        return cls(ct, content_object.pk, reversed)
 
     def __init__(self, content_type, object_id, reversed=False):
         self.ct_id = content_type.id
@@ -61,11 +62,20 @@ class CommentList(object):
         except IndexError:
             return None
 
+    def page_index(self, comment_id, paginate_by=comments_settings.PAGINATE_BY):
+        clist = redis.lrange(self._key, 0, -1)
+        try:
+            cindex = clist.index(str(comment_id))
+        except ValueError:
+            return 0
+        if self._reversed:
+            cindex = -1 - cindex
+        return cindex // paginate_by + 1
+
     def _verify_own(self, comment):
         return  comment.content_type_id == self.ct_id and\
                 comment.object_id == self.obj_id and \
                 Site.objects.get_current() == comment.site
-
 
     def get_comment(self, comment_id):
         c = get_cached_object(FlatComment, pk=comment_id)
@@ -120,6 +130,15 @@ class FlatComment(models.Model):
     is_public = models.BooleanField(default=True)
 
     app_data = AppDataField()
+
+    def _comment_list(self, reversed=False):
+        return CommentList(self.content_type, self.object_id, reversed)
+
+    def get_absolute_url(self, reversed=False):
+        return '%s?p=%d' % (
+                resolver.reverse(self.content_object, 'comments-list'),
+                self._comment_list(reversed).page_index(self.pk)
+            )
 
     def delete(self):
         CommentList(self.content_type, self.object_id).moderate_comment(self, None, False)
