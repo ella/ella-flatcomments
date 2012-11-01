@@ -61,17 +61,12 @@ class CommentList(object):
         except IndexError:
             return None
 
+
     def get_comment(self, comment_id):
         c = get_cached_object(FlatComment, pk=comment_id)
         if c.content_type_id != self.ct_id or c.object_id != self.obj_id or Site.objects.get_current() != c.site:
             raise FlatComment.DoesNotExist()
         return c
-
-    def add_comment(self, comment):
-        redis.lpush(self._key, comment.id)
-
-    def remove_comment(self, comment):
-        redis.lrem(self._key, 0, comment.id)
 
     def post_comment(self, comment, request):
         """
@@ -86,20 +81,21 @@ class CommentList(object):
                 return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
         comment.save(force_insert=True)
         # add comment to redis
-        CommentList(comment.content_type, comment.object_id).add_comment(comment)
+        redis.lpush(self._key, comment.id)
         responses = comment_was_posted.send(FlatComment, comment=comment, request=request)
         return True, None
 
-    def moderate_comment(self, comment, user):
+    def moderate_comment(self, comment, user, commit=True):
         """
         Mark some comment as moderated and fire a signal to make other apps aware of this
         """
         if not comment.is_public:
             return
         comment.is_public = False
-        FlatComment.objects.filter(pk=comment.pk).update(is_public=False)
+        if commit:
+            FlatComment.objects.filter(pk=comment.pk).update(is_public=False)
         # remove comment from redis
-        CommentList(comment.content_type, comment.object_id).remove_comment(comment)
+        redis.lrem(self._key, 0, comment.id)
         comment_was_moderated.send(FlatComment, comment=comment, user=user)
 
 
@@ -119,9 +115,7 @@ class FlatComment(models.Model):
     app_data = AppDataField()
 
     def delete(self):
-        CommentList(self.content_type, self.object_id).remove_comment(self)
-        if self.is_public:
-            comment_was_moderated.send(self.__class__, comment=self, user=None)
+        CommentList(self.content_type, self.object_id).moderate_comment(self, None, False)
         super(FlatComment, self).delete()
 
     def save(self, **kwargs):
