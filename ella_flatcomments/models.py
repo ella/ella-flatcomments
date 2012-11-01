@@ -95,10 +95,12 @@ class CommentList(object):
         for (receiver, response) in responses:
             if response == False:
                 return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
-        comment.save(force_insert=True)
-        # add comment to redis
-        redis.lpush(self._key, comment.id)
-        responses = comment_was_posted.send(FlatComment, comment=comment, request=request)
+        new = not bool(comment.pk)
+        comment.save()
+        if new:
+            # add comment to redis
+            redis.lpush(self._key, comment.id)
+            responses = comment_was_posted.send(FlatComment, comment=comment, request=request)
         return True, None
 
     def moderate_comment(self, comment, user, commit=True):

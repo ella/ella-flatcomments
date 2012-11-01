@@ -1,4 +1,4 @@
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render
@@ -8,6 +8,7 @@ from ella.core.views import get_templates_from_publishable
 
 from ella_flatcomments.models import CommentList, FlatComment
 from ella_flatcomments.conf import comments_settings
+from ella_flatcomments.forms import FlatCommentMultiForm
 
 mod_required = user_passes_test(comments_settings.IS_MODERATOR_FUNC)
 
@@ -18,6 +19,7 @@ def get_template(name, obj=None):
 
 def show_reversed(request):
     # TODO: get reversed preferences from request
+    # TODO: maybe also pass in the object to makethe decision
     return False
 
 def list_comments(request, context):
@@ -45,7 +47,35 @@ def comment_detail(request, context, comment_id):
 @login_required
 @require_POST
 def post_comment(request, context, comment_id=None):
-    pass
+    clist = CommentList.for_object(context['object'])
+    comment = None
+    user = request.user
+    if comment_id:
+        try:
+            comment = clist.get_comment(comment_id)
+        except FlatComment.DoesNotExist:
+            raise Http404()
+
+        # make sure we don't change user when mod is editting a comment
+        user = comment.user
+
+        # you can only comment your own comments or you have to be a moderator
+        if comment.user != request.user and not comments_settings.IS_MODERATOR_FUNC(request.user):
+            raise HttpResponseForbidden("You cannot edit other people's comments.")
+
+    form = FlatCommentMultiForm(context['object'], user, data=request.POST, files=request.FILES, instance=comment)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        error, reason = clist.post_comment(comment, request)
+        if error:
+            return HttpResponseForbidden(reason)
+        return HttpResponseRedirect(comment.get_absolute_url(show_reversed(request)))
+
+    context.update({
+        'comment': comment,
+        'form': form
+    })
+    return render(request, get_template('comment_form.html', context['object']), context)
 
 @mod_required
 @require_POST
