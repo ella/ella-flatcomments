@@ -45,6 +45,7 @@ class PublishableTestCase(CommentTestCase):
         super(PublishableTestCase, self).setUp()
         create_basic_categories(self)
         create_and_place_a_publishable(self)
+        self.comment_list = CommentList.for_object(self.publishable)
 
     def _get_comment(self, commit=False, **kwargs):
         defaults = {
