@@ -32,8 +32,21 @@ class TestCommentList(ViewTestCase):
 
         tools.assert_equals([], response.context_data['comment_list'])
 
-    def test_throws_404_on_empty_page(self):
+    def test_raises_404_on_empty_page(self):
         tools.assert_raises(Http404, views.list_comments, self.get_request(data={'p': '2'}), self.get_context())
 
-    def test_throws_404_on_invalid_page(self):
+    def test_raises_404_on_invalid_page(self):
         tools.assert_raises(Http404, views.list_comments, self.get_request(data={'p': 'not a number'}), self.get_context())
+
+class TestComment_detail(ViewTestCase):
+    def test_raises_404_on_missing_comment(self):
+        tools.assert_raises(Http404, views.comment_detail, self.get_request(), self.get_context(), 1)
+
+    def test_redirects_to_comment_url(self):
+        c = self._get_comment()
+        self.comment_list.post_comment(c, None)
+
+        response = views.comment_detail(self.get_request(), self.get_context(), str(c.pk))
+
+        tools.assert_equals(302, response.status_code)
+        tools.assert_equals(c.get_absolute_url(), response['Location'])

@@ -60,3 +60,8 @@ LISTING_HANDLERS = {
 USE_REDIS_FOR_LISTINGS = True
 LISTINGS_REDIS = REDIS = COMMENTS_REDIS = {}
 COMMENTS_PAGINATE_BY = 2
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
