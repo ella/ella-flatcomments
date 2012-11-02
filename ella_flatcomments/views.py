@@ -1,8 +1,8 @@
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render
 from django.views.decorators.http import require_POST
+from django.template.response import TemplateResponse
 
 from ella.core.views import get_templates_from_publishable
 
@@ -26,12 +26,12 @@ def list_comments(request, context):
     clist = CommentList.for_object(context['object'], show_reversed(request))
     paginator = Paginator(clist, comments_settings.PAGINATE_BY)
     try:
-        context['page'] = paginator.get_page(request.GET.get('p', 1))
+        context['page'] = paginator.page(request.GET.get('p', 1))
     except (PageNotAnInteger, EmptyPage):
         raise Http404()
 
     context['comment_list'] = context['page'].object_list
-    return render(request, get_template('comment_list.html', context['object']), context)
+    return TemplateResponse(request, get_template('comment_list.html', context['object']), context)
 
 def comment_detail(request, context, comment_id):
     clist = CommentList.for_object(context['object'])
@@ -75,7 +75,7 @@ def post_comment(request, context, comment_id=None):
         'comment': comment,
         'form': form
     })
-    return render(request, get_template('comment_form.html', context['object']), context)
+    return TemplateResponse(request, get_template('comment_form.html', context['object']), context)
 
 @mod_required
 @require_POST
