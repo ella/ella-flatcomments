@@ -9,6 +9,7 @@ from ella.core.views import get_templates_from_publishable
 from ella_flatcomments.models import CommentList, FlatComment
 from ella_flatcomments.conf import comments_settings
 from ella_flatcomments.forms import FlatCommentMultiForm
+from ella_flatcomments.utils import show_reversed
 
 mod_required = user_passes_test(comments_settings.IS_MODERATOR_FUNC)
 
@@ -16,11 +17,6 @@ def get_template(name, obj=None):
     if hasattr(obj, 'get_templates'):
         return obj.get_templates(name)
     return get_templates_from_publishable(name, obj)
-
-def show_reversed(request):
-    # TODO: get reversed preferences from request
-    # TODO: maybe also pass in the object to makethe decision
-    return False
 
 def list_comments(request, context):
     clist = CommentList.for_object(context['object'], show_reversed(request))
