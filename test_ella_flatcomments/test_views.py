@@ -105,3 +105,30 @@ class TestPostComment(ViewTestCase):
         tools.assert_equals(c.content, 'New Comment Text!')
         tools.assert_equals(self.user, c.user)
 
+class TestModerateComment(ViewTestCase):
+    def setUp(self):
+        super(TestModerateComment, self).setUp()
+        self.comment = self._get_comment()
+        self.comment_list.post_comment(self.comment, None)
+        self.superuser = User.objects.create_superuser('some_OTHER_user', 'user@example.com', '!')
+
+    def test_login_required(self):
+        response = views.moderate_comment(self.get_request(method='POST'), self.get_context(), self.comment.pk)
+        tools.assert_equals(302, response.status_code)
+        tools.assert_equals(1, self.comment_list.count())
+
+    def test_moderator_required(self):
+        response = views.moderate_comment(self.get_request(method='POST', user=self.user), self.get_context(), self.comment.pk)
+        tools.assert_equals(302, response.status_code)
+        tools.assert_equals(1, self.comment_list.count())
+
+    def test_post_required(self):
+        response = views.moderate_comment(self.get_request(method='GET', user=self.superuser), self.get_context(), self.comment.pk)
+        tools.assert_equals(405, response.status_code)
+        tools.assert_equals(1, self.comment_list.count())
+
+    def test_moderated(self):
+        response = views.moderate_comment(self.get_request(method='POST', user=self.superuser), self.get_context(), self.comment.pk)
+
+        tools.assert_equals(302, response.status_code)
+        tools.assert_equals(0, self.comment_list.count())

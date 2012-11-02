@@ -87,7 +87,7 @@ def moderate_comment(request, context, comment_id):
         raise Http404()
 
     url = comment.get_absolute_url()
-    FlatComment.models.moderate_comment(comment, request.user)
+    clist.moderate_comment(comment, request.user)
     if request.is_ajax():
         return HttpResponse('{"error": false}', content_type='application/json')
     return HttpResponseRedirect(url)
