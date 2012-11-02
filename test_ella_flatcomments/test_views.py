@@ -1,6 +1,7 @@
 from django.test import RequestFactory
 from django.http import Http404
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import User
 
 from ella_flatcomments import views
 
@@ -50,3 +51,57 @@ class TestComment_detail(ViewTestCase):
 
         tools.assert_equals(302, response.status_code)
         tools.assert_equals(c.get_absolute_url(), response['Location'])
+
+class TestPostComment(ViewTestCase):
+    def test_login_required(self):
+        response = views.post_comment(self.get_request(method='POST'), self.get_context())
+        tools.assert_equals(302, response.status_code)
+
+    def test_post_required(self):
+        response = views.post_comment(self.get_request(method='GET', user=self.user), self.get_context())
+        tools.assert_equals(405, response.status_code)
+
+    def test_post_with_content_goes_through(self):
+        response = views.post_comment(self.get_request(method='POST', user=self.user, data={'content': 'New Comment!'}), self.get_context())
+
+        tools.assert_equals(302, response.status_code)
+        tools.assert_equals(1, self.comment_list.count())
+        c = self.comment_list.last_comment()
+        tools.assert_equals(c.get_absolute_url(), response['Location'])
+        tools.assert_equals(c.content, 'New Comment!')
+
+    def test_users_can_edit_their_comments(self):
+        c = self._get_comment()
+        self.comment_list.post_comment(c, None)
+        response = views.post_comment(self.get_request(method='POST', user=self.user, data={'content': 'New Comment Text!'}), self.get_context(), str(c.pk))
+
+        tools.assert_equals(302, response.status_code)
+        tools.assert_equals(1, self.comment_list.count())
+        c = self.comment_list.last_comment()
+        tools.assert_equals(c.get_absolute_url(), response['Location'])
+        tools.assert_equals(c.content, 'New Comment Text!')
+
+    def test_users_cannot_other_users_comments(self):
+        c = self._get_comment()
+        self.comment_list.post_comment(c, None)
+        user = User.objects.create_user('some_OTHER_user', 'user@example.com')
+
+        response = views.post_comment(self.get_request(method='POST', user=user, data={'content': 'New Comment Text!'}), self.get_context(), str(c.pk))
+
+        tools.assert_equals(403, response.status_code)
+        c = self.comment_list.last_comment()
+        tools.assert_not_equals(c.content, 'New Comment Text!')
+
+    def test_staff_can_edit_other_users_comments(self):
+        c = self._get_comment()
+        self.comment_list.post_comment(c, None)
+        user = User.objects.create_superuser('some_OTHER_user', 'user@example.com', '!')
+        response = views.post_comment(self.get_request(method='POST', user=user, data={'content': 'New Comment Text!'}), self.get_context(), str(c.pk))
+
+        tools.assert_equals(302, response.status_code)
+        tools.assert_equals(1, self.comment_list.count())
+        c = self.comment_list.last_comment()
+        tools.assert_equals(c.get_absolute_url(), response['Location'])
+        tools.assert_equals(c.content, 'New Comment Text!')
+        tools.assert_equals(self.user, c.user)
+

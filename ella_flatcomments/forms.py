@@ -6,7 +6,7 @@ from ella_flatcomments.models import FlatComment
 
 class FlatCommentForm(ModelForm):
     def __init__(self, content_object, user, *args, **kwargs):
-        self.content_type = content_object
+        self.content_object = content_object
         self.user = user
         super(FlatCommentForm, self).__init__(*args, **kwargs)
 

@@ -61,13 +61,13 @@ def post_comment(request, context, comment_id=None):
 
         # you can only comment your own comments or you have to be a moderator
         if comment.user != request.user and not comments_settings.IS_MODERATOR_FUNC(request.user):
-            raise HttpResponseForbidden("You cannot edit other people's comments.")
+            return HttpResponseForbidden("You cannot edit other people's comments.")
 
     form = FlatCommentMultiForm(context['object'], user, data=request.POST, files=request.FILES, instance=comment)
     if form.is_valid():
         comment = form.save(commit=False)
-        error, reason = clist.post_comment(comment, request)
-        if error:
+        success, reason = clist.post_comment(comment, request)
+        if not success:
             return HttpResponseForbidden(reason)
         return HttpResponseRedirect(comment.get_absolute_url(show_reversed(request)))
 

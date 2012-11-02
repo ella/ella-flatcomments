@@ -112,7 +112,8 @@ class CommentList(object):
             return
         comment.is_public = False
         if commit:
-            FlatComment.objects.filter(pk=comment.pk).update(is_public=False)
+            # do not do UPDATE for pre/post_save signals to be called
+            comment.save(force_update=True)
         # remove comment from redis
         redis.lrem(self._key, 0, comment.id)
         comment_was_moderated.send(FlatComment, comment=comment, user=user)
