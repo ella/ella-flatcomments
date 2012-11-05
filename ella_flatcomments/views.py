@@ -58,7 +58,11 @@ def post_comment(request, context, comment_id=None):
         if comment.user != request.user and not comments_settings.IS_MODERATOR_FUNC(request.user):
             return HttpResponseForbidden("You cannot edit other people's comments.")
 
-    form = FlatCommentMultiForm(context['object'], user, data=request.POST, files=request.FILES, instance=comment)
+    data, files = None, None
+    if request.method == 'POST':
+        data, files = request.POST, request.FILES
+
+    form = FlatCommentMultiForm(context['object'], user, data=data, files=files, instance=comment)
     if form.is_valid():
         comment = form.save(commit=False)
         success, reason = clist.post_comment(comment, request)
