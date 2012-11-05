@@ -24,7 +24,7 @@ def comment_count(parser, token):
     {% comment_count for <blabla> as cnt %}
     {% comment_count for <content_type> <pk> as cnt %}
     """
-    return CommentCountNode(*_parse_comment_tag(token.split_contents()))
+    return _parse_comment_tag(token.split_contents(), CommentCountNode)
 
 @register.tag
 def comment_list(parser, token):
@@ -32,7 +32,7 @@ def comment_list(parser, token):
     {% comment_list for <blabla> as clist %}
     {% comment_list for <content_type> <pk> as clist %}
     """
-    return CommentListNode(*_parse_comment_tag(token.split_contents()))
+    return _parse_comment_tag(token.split_contents(), CommentListNode)
 
 @register.tag
 def comment_form(parser, token):
@@ -74,12 +74,12 @@ class BaseCommentListNode(template.Node):
         return ''
 
 
-def CommentCountNode(BaseCommentListNode):
+class CommentCountNode(BaseCommentListNode):
     def value_from_comment_list(self, comment_list, context):
         return comment_list.count()
 
 
-def CommentListNode(BaseCommentListNode):
+class CommentListNode(BaseCommentListNode):
     def value_from_comment_list(self, comment_list, context):
         return comment_list[:comments_settings.PAGINATE_BY]
 
@@ -99,7 +99,7 @@ class CommentFormNode(template.Node):
         return ''
 
 
-def _parse_comment_tag(bits, docstring):
+def _parse_comment_tag(bits, NodeClass):
     if len(bits) not in (5, 6) or bits[1] != 'for' or bits[-2] != 'as':
         raise template.TemplateSyntaxError('{%% %s for {<content_type> <pk>|<var>} as <var_name> %%}' % bits[0])
 
@@ -108,4 +108,4 @@ def _parse_comment_tag(bits, docstring):
     else:
         lookup = map(template.Variable, bits[2:4])
 
-    return lookup, bits[-1]
+    return NodeClass(lookup, bits[-1])
