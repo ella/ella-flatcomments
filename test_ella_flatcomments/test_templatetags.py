@@ -1,6 +1,9 @@
 from django import template
 from django.contrib.auth.models import User
 
+from ella_flatcomments.templatetags.comment_tags import CommentFormNode
+from ella_flatcomments.forms import FlatCommentMultiForm
+
 from test_ella_flatcomments.cases import CommentTestCase
 
 from nose import tools
@@ -27,3 +30,22 @@ class TestFilters(CommentTestCase):
     def test_user_cannot_edit_other_comments(self):
         c = self._get_comment()
         tools.assert_equals('NO', self.EDIT_TEMPLATE.render(template.Context({'user': User(username='not him', pk=12), 'comment': c})))
+
+class TestCommentForm(CommentTestCase):
+    def test_syntax_error_on_wrong_syntax(self):
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form for XXX as YYY additional_stuff %}')
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form for XXX as %}')
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form for XXX = YYY %}')
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form from XXX as YYY %}')
+
+    def test_correct_form_is_set_in_context(self):
+        cfn = CommentFormNode(template.Variable('object'), 'form')
+        c = template.Context({'user': self.user, 'object': self.content_object})
+
+        cfn.render(c)
+        tools.assert_true('form' in c)
+        form = c['form']
+        tools.assert_true(isinstance(form, FlatCommentMultiForm))
+        tools.assert_equals(self.content_object, form.model_form.content_object)
+        tools.assert_equals(self.user, form.model_form.user)
+

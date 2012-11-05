@@ -95,7 +95,7 @@ class CommentFormNode(template.Node):
         except template.VariableDoesNotExist:
             return ''
 
-        context[self.form_var] = FlatCommentMultiForm(instance=content_object, user=context['user'])
+        context[self.form_var] = FlatCommentMultiForm(content_object, context['user'])
         return ''
 
 
