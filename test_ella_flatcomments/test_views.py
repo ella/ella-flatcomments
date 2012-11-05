@@ -57,10 +57,6 @@ class TestPostComment(ViewTestCase):
         response = views.post_comment(self.get_request(method='POST'), self.get_context())
         tools.assert_equals(302, response.status_code)
 
-    def test_post_required(self):
-        response = views.post_comment(self.get_request(method='GET', user=self.user), self.get_context())
-        tools.assert_equals(405, response.status_code)
-
     def test_post_with_content_goes_through(self):
         response = views.post_comment(self.get_request(method='POST', user=self.user, data={'content': 'New Comment!'}), self.get_context())
 

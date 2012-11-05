@@ -41,7 +41,6 @@ def comment_detail(request, context, comment_id):
     return HttpResponseRedirect(comment.get_absolute_url(show_reversed(request)))
 
 @login_required
-@require_POST
 def post_comment(request, context, comment_id=None):
     clist = CommentList.for_object(context['object'])
     comment = None
