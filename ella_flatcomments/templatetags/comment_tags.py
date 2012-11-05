@@ -14,7 +14,7 @@ def can_moderate(user):
     return comments_settings.IS_MODERATOR_FUNC(user)
 
 @register.filter
-def can_edit(comment, user):
+def can_edit(user, comment):
     " {{ user|can_edit:comment }} "
     return comments_settings.IS_MODERATOR_FUNC(user) or comment.user == user
 
