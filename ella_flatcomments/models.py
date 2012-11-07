@@ -28,7 +28,7 @@ class CommentList(object):
 
     def __init__(self, content_type, object_id, reversed=False):
         self.ct_id = content_type.id
-        self.obj_id = object_id
+        self.obj_id = str(object_id)
 
         self._key = comments_settings.LIST_KEY % (Site.objects.get_current().id, content_type.id, object_id)
         self._reversed = reversed
@@ -74,7 +74,7 @@ class CommentList(object):
 
     def _verify_own(self, comment):
         return  comment.content_type_id == self.ct_id and\
-                comment.object_id == self.obj_id and \
+                str(comment.object_id) == self.obj_id and \
                 Site.objects.get_current() == comment.site
 
     def get_comment(self, comment_id):
@@ -83,7 +83,7 @@ class CommentList(object):
             raise FlatComment.DoesNotExist()
         return c
 
-    def post_comment(self, comment, request):
+    def post_comment(self, comment, request=None):
         """
         Post comment, fire of all the signals connected to that event and see
         if any receiver shut the posting down.
@@ -123,7 +123,7 @@ class FlatComment(models.Model):
     site = SiteForeignKey(default=Site.objects.get_current)
 
     content_type = ContentTypeForeignKey()
-    object_id = models.IntegerField()
+    object_id = models.CharField(max_length=255)
     content_object = CachedGenericForeignKey('content_type', 'object_id')
 
     content = models.TextField()

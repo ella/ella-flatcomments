@@ -69,7 +69,7 @@ class TestCommentNodeParsing(CommentTestCase):
         comment_list = ccnode.get_comment_list(self.context)
 
         tools.assert_equals(self.content_type.pk, comment_list.ct_id)
-        tools.assert_equals(1, comment_list.obj_id)
+        tools.assert_equals('1', comment_list.obj_id)
 
     def test_value_from_ct_id_pair(self):
         ccnode = _parse_comment_tag(['comment_list', 'for', 'ct', 'obj_pk', 'as', 'var'], CommentListNode)
@@ -78,7 +78,7 @@ class TestCommentNodeParsing(CommentTestCase):
         comment_list = ccnode.get_comment_list(self.context)
 
         tools.assert_equals(self.content_type.pk, comment_list.ct_id)
-        tools.assert_equals(1, comment_list.obj_id)
+        tools.assert_equals('1', comment_list.obj_id)
 
     def test_comment_count(self):
         t = template.Template('{% load comment_tags %}{% comment_count for object as cnt %}{{ cnt }}')
