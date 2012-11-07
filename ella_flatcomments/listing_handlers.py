@@ -3,11 +3,11 @@ from ella.core.cache.redis import RedisListingHandler, SlidingListingHandler, Ti
 from ella_flatcomments.models import CommentList
 
 class RecentMostCommentedListingHandler(SlidingListingHandler):
-    PREFIX = 'recent_comcount'
+    PREFIX = 'recently_commented'
 
 
 class MostCommentedListingHandler(RedisListingHandler):
-    PREFIX = 'comcount'
+    PREFIX = 'most_commented'
 
     @classmethod
     def add_publishable(cls, category, publishable, score=None, pipe=None, commit=True):
@@ -20,7 +20,7 @@ class MostCommentedListingHandler(RedisListingHandler):
 
 
 class LastCommentedListingHandler(TimeBasedListingHandler):
-    PREFIX = 'lastcommented'
+    PREFIX = 'last_commented'
 
     @classmethod
     def add_publishable(cls, category, publishable, score=None, publish_from=None, pipe=None, commit=True):
