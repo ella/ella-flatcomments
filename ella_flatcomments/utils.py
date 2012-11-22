@@ -1,3 +1,7 @@
+from django.contrib import comments
+
+from ella_flatcomments.models import FlatComment
+
 def show_reversed(request):
     reverse = False
     # TODO: maybe also pass in the content_type to makethe decision
@@ -14,11 +18,11 @@ def disconnect_legacy_signals():
     content_unpublished.disconnect(publishable_unpublished)
 
 def migrate_legacy_comments():
-    from threadedcomments.models import ThreadedComment
+    CommentModel = comments.get_model()
+    if not CommentModel._meta.installed:
+        return
 
-    from ella_flatcomments.models import FlatComment
-
-    for c in ThreadedComment.objects.exclude(user__isnull=True).order_by('submit_date').iterator():
+    for c in CommentModel.objects.exclude(user__isnull=True).order_by('submit_date').iterator():
         fc = FlatComment(
             site_id=c.site_id,
             content_type_id=c.content_type_id,
