@@ -44,4 +44,6 @@ class TestMigrations(PublishableTestCase):
         migrate_legacy_comments()
 
         tools.assert_equals(10, self.comment_list.count())
+        c = self.comment_list.last_comment()
+        tools.assert_equals('9th', c.comment)
 
