@@ -109,6 +109,10 @@ class TestCommentList(CommentTestCase):
     def test_get_last_comment(self):
         tools.assert_equals(10, self.comment_list.last_comment())
 
+    def test_get_last_comment_on_reversed_list(self):
+        self.comment_list._reversed = True
+        tools.assert_equals(10, self.comment_list.last_comment())
+
     def test_slice(self):
         clist = range(11)
         clist.reverse()
