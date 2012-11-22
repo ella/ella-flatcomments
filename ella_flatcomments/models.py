@@ -97,7 +97,7 @@ class CommentList(object):
                 return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
         new = not bool(comment.pk)
         comment.save()
-        if new:
+        if new and comment.is_public:
             # add comment to redis
             redis.lpush(self._key, comment.id)
             responses = comment_was_posted.send(FlatComment, comment=comment, request=request)

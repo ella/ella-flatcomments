@@ -12,3 +12,24 @@ def disconnect_legacy_signals():
 
     content_published.disconnect(publishable_published)
     content_unpublished.disconnect(publishable_unpublished)
+
+def migrate_legacy_comments():
+    from threadedcomments.models import ThreadedComment
+
+    from ella_flatcomments.models import FlatComment
+
+    for c in ThreadedComment.objects.exclude(user__isnull=True).order_by('submit_date').iterator():
+        fc = FlatComment(
+            site_id=c.site_id,
+            content_type_id=c.content_type_id,
+            object_id=c.object_pk,
+
+            submit_date=c.submit_date,
+            user=c.user,
+            content=c.comment,
+
+            is_public=c.is_public and not c.is_removed,
+        )
+
+        clist = fc._comment_list()
+        clist.post_comment(fc)
