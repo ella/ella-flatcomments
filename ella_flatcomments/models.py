@@ -126,7 +126,7 @@ class FlatComment(models.Model):
     object_id = models.CharField(max_length=255)
     content_object = CachedGenericForeignKey('content_type', 'object_id')
 
-    content = models.TextField()
+    comment = models.TextField()
 
     submit_date = models.DateTimeField(default=None)
     user = CachedForeignKey(User)

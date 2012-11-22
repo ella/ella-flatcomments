@@ -31,7 +31,7 @@ class CommentTestCase(RedisTestCase):
             content_type=self.content_type,
             object_id=self.content_object.pk,
             user=self.user,
-            content=''
+            comment=''
         )
         defaults.update(kwargs)
 

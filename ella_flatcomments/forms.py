@@ -17,7 +17,7 @@ class FlatCommentForm(ModelForm):
     class Meta:
         model = FlatComment
         fields = (
-            'content',
+            'comment',
         )
 
 FlatCommentMultiForm = multiform_factory(FlatCommentForm)

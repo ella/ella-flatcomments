@@ -26,7 +26,7 @@ def migrate_legacy_comments():
 
             submit_date=c.submit_date,
             user=c.user,
-            content=c.comment,
+            comment=c.comment,
 
             is_public=c.is_public and not c.is_removed,
         )
