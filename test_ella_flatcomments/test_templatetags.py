@@ -1,4 +1,5 @@
 from django import template
+from django.test import RequestFactory
 from django.contrib.auth.models import User
 
 from ella_flatcomments.templatetags.comment_tags import CommentFormNode, CommentCountNode, CommentListNode, _parse_comment_tag
@@ -60,7 +61,8 @@ class TestCommentNodeParsing(CommentTestCase):
     '''
     def setUp(self):
         super(TestCommentNodeParsing, self).setUp()
-        self.context = template.Context({'request': None, 'user': self.user, 'object': self.content_object, 'ct': self.content_type, 'obj_pk': 1})
+        request = RequestFactory().get('/')
+        self.context = template.Context({'request': request, 'user': self.user, 'object': self.content_object, 'ct': self.content_type, 'obj_pk': 1})
 
     def test_value_from_var(self):
         ccnode = _parse_comment_tag(['comment_list', 'for', 'object', 'as', 'var'], CommentCountNode)
