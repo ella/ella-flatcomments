@@ -14,7 +14,7 @@ class Migration(SchemaMigration):
             ('site', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sites.Site'])),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
             ('object_id', self.gf('django.db.models.fields.IntegerField')()),
-            ('content', self.gf('django.db.models.fields.TextField')()),
+            ('comment', self.gf('django.db.models.fields.TextField')()),
             ('submit_date', self.gf('django.db.models.fields.DateTimeField')(default=None)),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
             ('is_public', self.gf('django.db.models.fields.BooleanField')(default=True)),
@@ -68,7 +68,7 @@ class Migration(SchemaMigration):
         'ella_flatcomments.flatcomment': {
             'Meta': {'object_name': 'FlatComment'},
             'app_data': ('app_data.fields.AppDataField', [], {'default': "'{}'"}),
-            'content': ('django.db.models.fields.TextField', [], {}),
+            'comment': ('django.db.models.fields.TextField', [], {}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_public': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
