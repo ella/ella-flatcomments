@@ -40,13 +40,19 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.redirects',
     'django.contrib.admin',
+    'django.contrib.comments',
 
     'ella.core',
     'ella.photos',
     'ella.articles',
 
+    'threadedcomments',
+    'ella_comments',
+
     'ella_flatcomments',
 )
+
+COMMENTS_APP = 'ella_comments'
 
 SITE_ID = 1
 

@@ -3,3 +3,7 @@ nose
 coverage
 mock
 PIL
+
+# for testing migrations:
+git+https://github.com/HonzaKral/django-threadedcomments.git#egg=django-threadedcomments
+git+https://github.com/ella/ella-comments.git#egg=ella-comments

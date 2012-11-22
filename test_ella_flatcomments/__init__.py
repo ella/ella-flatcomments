@@ -10,6 +10,8 @@ def setup():
     test_runner.setup_test_environment()
     old_config = test_runner.setup_databases()
     call_modules(('register', ))
+    from ella_flatcomments.utils import disconnect_legacy_signals
+    disconnect_legacy_signals()
 
 def teardown():
     test_runner.teardown_databases(old_config)
