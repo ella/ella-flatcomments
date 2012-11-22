@@ -57,10 +57,10 @@ class CommentList(object):
         return get_cached_objects(pks, model=FlatComment, missing=SKIP)
 
     def last_comment(self):
-        try:
-            return self[0]
-        except IndexError:
+        pk = redis.lindex(self._key, 0)
+        if pk is None:
             return None
+        return get_cached_object(FlatComment, pk=pk)
 
     def page_index(self, comment_id, paginate_by=comments_settings.PAGINATE_BY):
         clist = redis.lrange(self._key, 0, -1)
