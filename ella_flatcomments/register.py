@@ -8,6 +8,7 @@ from ella.core.custom_urls import resolver
 
 from ella_flatcomments.urls import urlpatterns
 from ella_flatcomments.conf import comments_settings
+from ella_flatcomments.models import FlatComment
 from ella_flatcomments.signals import comment_was_posted, comment_was_moderated
 
 LISTING_HANDLERS = None
@@ -58,5 +59,5 @@ def publishable_published(publishable, delta=0, **kwargs):
 content_published.connect(publishable_published)
 content_unpublished.connect(publishable_unpublished)
 
-comment_was_posted.connect(comment_posted)
-comment_was_moderated.connect(comment_moderated)
+comment_was_posted.connect(comment_posted, sender=FlatComment)
+comment_was_moderated.connect(comment_moderated, sender=FlatComment)
