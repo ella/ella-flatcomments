@@ -1,4 +1,4 @@
-from redis import StrictRedis
+from redis import Redis
 
 from django.test import TestCase
 from django.conf import settings
@@ -12,7 +12,7 @@ from ella_flatcomments.models import FlatComment, CommentList
 class RedisTestCase(TestCase):
     def setUp(self):
         super(RedisTestCase, self).setUp()
-        self.redis = StrictRedis(**settings.REDIS)
+        self.redis = Redis(**settings.REDIS)
 
     def tearDown(self):
         super(RedisTestCase, self).tearDown()

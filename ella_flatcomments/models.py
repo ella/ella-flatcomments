@@ -1,4 +1,4 @@
-from redis import StrictRedis
+from redis import Redis
 
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
@@ -15,7 +15,7 @@ from ella.utils import timezone
 from ella_flatcomments.signals import comment_was_moderated, comment_will_be_posted, comment_was_posted
 from ella_flatcomments.conf import comments_settings
 
-redis = StrictRedis(**comments_settings.REDIS)
+redis = Redis(**comments_settings.REDIS)
 
 class CommentList(object):
     @classmethod
@@ -115,7 +115,7 @@ class CommentList(object):
             # do not do UPDATE for pre/post_save signals to be called
             comment.save(force_update=True)
         # remove comment from redis
-        redis.lrem(self._key, 0, comment.id)
+        redis.lrem(self._key, comment.id)
         comment_was_moderated.send(FlatComment, comment=comment, user=user)
 
 
