@@ -22,6 +22,7 @@ def migrate_legacy_comments():
     if not CommentModel._meta.installed:
         return
 
+    cnt = 0
     for c in CommentModel.objects.exclude(user__isnull=True).order_by('submit_date').iterator():
         fc = FlatComment(
             site_id=c.site_id,
@@ -35,5 +36,6 @@ def migrate_legacy_comments():
             is_public=c.is_public and not c.is_removed,
         )
 
-        clist = fc._comment_list()
-        clist.post_comment(fc)
+        fc.post()
+        cnt += 1
+    return cnt

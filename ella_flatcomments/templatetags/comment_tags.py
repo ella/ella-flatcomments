@@ -19,35 +19,35 @@ def can_edit(user, comment):
     return comments_settings.IS_MODERATOR_FUNC(user) or comment.user == user
 
 @register.tag
-def comment_count(parser, token):
+def get_comment_count(parser, token):
     """
-    {% comment_count for <blabla> as cnt %}
-    {% comment_count for <content_type> <pk> as cnt %}
+    {% get_comment_count for <blabla> as cnt %}
+    {% get_comment_count for <content_type> <pk> as cnt %}
     """
     return _parse_comment_tag(token.split_contents(), CommentCountNode)
 
 @register.tag
-def comment_list(parser, token):
+def get_comment_list(parser, token):
     """
-    {% comment_list for <blabla> as clist %}
-    {% comment_list for <content_type> <pk> as clist %}
+    {% get_comment_list for <blabla> as clist %}
+    {% get_comment_list for <content_type> <pk> as clist %}
     """
     return _parse_comment_tag(token.split_contents(), CommentListNode)
 
 @register.tag
-def comment_lock_status(parser, token):
+def get_comment_lock_status(parser, token):
     """
-    {% comment_lock_status for <blabla> as lock_status %}
-    {% comment_lock_status for <content_type> <pk> as lock_status %}
+    {% get_comment_lock_status for <blabla> as lock_status %}
+    {% get_comment_lock_status for <content_type> <pk> as lock_status %}
     """
     return _parse_comment_tag(token.split_contents(), CommentLockStatusNode)
 
 @register.tag
-def comment_form(parser, token):
-    """ {% comment_form for blabla as clist %} """
+def get_comment_form(parser, token):
+    """ {% get_comment_form for blabla as clist %} """
     bits = token.split_contents()
     if len(bits) != 5 or bits[1] != 'for' or bits[3] != 'as':
-        raise template.TemplateSyntaxError(comment_form.__doc__)
+        raise template.TemplateSyntaxError(get_comment_form.__doc__)
 
     return CommentFormNode(template.Variable(bits[2]), bits[4])
 

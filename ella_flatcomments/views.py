@@ -27,7 +27,11 @@ def list_comments(request, context):
         raise Http404()
 
     context['comment_list'] = context['page'].object_list
-    return TemplateResponse(request, get_template('comment_list.html', context['object']), context)
+    context['is_paginated'] = context['page'].has_other_pages()
+    template_name = 'comment_list.html'
+    if request.is_ajax():
+        template_name = 'comment_list_async.html'
+    return TemplateResponse(request, get_template(template_name, context['object']), context)
 
 def comment_detail(request, context, comment_id):
     clist = CommentList.for_object(context['object'])

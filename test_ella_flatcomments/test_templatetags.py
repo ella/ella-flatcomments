@@ -42,7 +42,7 @@ class TestLockStatus(CommentTestCase):
         request = RequestFactory().get('/')
         self.context = template.Context({'request': request, 'user': self.user, 'object': self.content_object, 'ct': self.content_type, 'obj_pk': 1})
 
-    TEMPLATE = template.Template('{% load comment_tags %}{% comment_lock_status for object as status %}{% if status %}YES{% else %}NO{% endif %}')
+    TEMPLATE = template.Template('{% load comment_tags %}{% get_comment_lock_status for object as status %}{% if status %}YES{% else %}NO{% endif %}')
     def test_locked(self):
         self.comment_list.lock()
         tools.assert_equals('YES', self.TEMPLATE.render(self.context))
@@ -52,10 +52,10 @@ class TestLockStatus(CommentTestCase):
 
 class TestCommentForm(CommentTestCase):
     def test_syntax_error_on_wrong_syntax(self):
-        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form for XXX as YYY additional_stuff %}')
-        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form for XXX as %}')
-        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form for XXX = YYY %}')
-        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form from XXX as YYY %}')
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% get_comment_form for XXX as YYY additional_stuff %}')
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% get_comment_form for XXX as %}')
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% get_comment_form for XXX = YYY %}')
+        tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% get_comment_form from XXX as YYY %}')
 
     def test_correct_form_is_set_in_context(self):
         cfn = CommentFormNode(template.Variable('object'), 'form')
@@ -97,7 +97,7 @@ class TestCommentNodeParsing(CommentTestCase):
         tools.assert_equals('1', comment_list.obj_id)
 
     def test_comment_count(self):
-        t = template.Template('{% load comment_tags %}{% comment_count for object as cnt %}{{ cnt }}')
+        t = template.Template('{% load comment_tags %}{% get_comment_count for object as cnt %}{{ cnt }}')
         class MyCommentList(CommentList):
             def count(self):
                 return 42
@@ -108,7 +108,7 @@ class TestCommentNodeParsing(CommentTestCase):
         tools.assert_equals('42', t.render(self.context))
 
     def test_comment_list(self):
-        t = template.Template('{% load comment_tags %}{% comment_list for object as clist %}{{ clist }}')
+        t = template.Template('{% load comment_tags %}{% get_comment_list for object as clist %}{{ clist }}')
         class MyCommentList(CommentList):
             def __getitem__(self, key):
                 return '%s:%s' % (key.start, key.stop)
