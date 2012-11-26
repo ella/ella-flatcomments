@@ -36,6 +36,20 @@ class TestFilters(CommentTestCase):
         c = self._get_comment()
         tools.assert_equals('NO', self.EDIT_TEMPLATE.render(template.Context({'user': User(username='not him', pk=12), 'comment': c})))
 
+class TestLockStatus(CommentTestCase):
+    def setUp(self):
+        super(TestLockStatus, self).setUp()
+        request = RequestFactory().get('/')
+        self.context = template.Context({'request': request, 'user': self.user, 'object': self.content_object, 'ct': self.content_type, 'obj_pk': 1})
+
+    TEMPLATE = template.Template('{% load comment_tags %}{% comment_lock_status for object as status %}{% if status %}YES{% else %}NO{% endif %}')
+    def test_locked(self):
+        self.comment_list.lock()
+        tools.assert_equals('YES', self.TEMPLATE.render(self.context))
+
+    def test_unlocked(self):
+        tools.assert_equals('NO', self.TEMPLATE.render(self.context))
+
 class TestCommentForm(CommentTestCase):
     def test_syntax_error_on_wrong_syntax(self):
         tools.assert_raises(template.TemplateSyntaxError, template.Template, '{% load comment_tags %}{% comment_form for XXX as YYY additional_stuff %}')

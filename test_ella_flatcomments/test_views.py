@@ -13,6 +13,7 @@ class ViewTestCase(PublishableTestCase):
     def setUp(self):
         super(ViewTestCase, self).setUp()
         self.rf = RequestFactory()
+        self.superuser = User.objects.create_superuser('superuser', 'user@example.com', '!')
 
     def get_request(self, method='GET', path='/', user=AnonymousUser(), data={}):
         request = getattr(self.rf, method.lower())(path, data)
@@ -91,8 +92,7 @@ class TestPostComment(ViewTestCase):
     def test_staff_can_edit_other_users_comments(self):
         c = self._get_comment()
         self.comment_list.post_comment(c, None)
-        user = User.objects.create_superuser('some_OTHER_user', 'user@example.com', '!')
-        response = views.post_comment(self.get_request(method='POST', user=user, data={'comment': 'New Comment Text!'}), self.get_context(), str(c.pk))
+        response = views.post_comment(self.get_request(method='POST', user=self.superuser, data={'comment': 'New Comment Text!'}), self.get_context(), str(c.pk))
 
         tools.assert_equals(302, response.status_code)
         tools.assert_equals(1, self.comment_list.count())
@@ -101,12 +101,47 @@ class TestPostComment(ViewTestCase):
         tools.assert_equals(c.comment, 'New Comment Text!')
         tools.assert_equals(self.user, c.user)
 
+
+class TestLockUnLockComments(ViewTestCase):
+    def test_login_required_for_lock(self):
+        response = views.lock_comments(self.get_request(method='POST'), self.get_context())
+        tools.assert_equals(302, response.status_code)
+        tools.assert_false(self.comment_list.locked())
+
+    def test_moderator_required_for_lock(self):
+        response = views.lock_comments(self.get_request(method='POST', user=self.user), self.get_context())
+        tools.assert_equals(302, response.status_code)
+        tools.assert_false(self.comment_list.locked())
+
+    def test_login_required_for_unlock(self):
+        self.comment_list.lock()
+        response = views.unlock_comments(self.get_request(method='POST'), self.get_context())
+        tools.assert_equals(302, response.status_code)
+        tools.assert_true(self.comment_list.locked())
+
+    def test_moderator_required_for_unlock(self):
+        self.comment_list.lock()
+        response = views.unlock_comments(self.get_request(method='POST', user=self.user), self.get_context())
+        tools.assert_equals(302, response.status_code)
+        tools.assert_true(self.comment_list.locked())
+
+    def test_lock_locks(self):
+        response = views.lock_comments(self.get_request(method='POST', user=self.superuser), self.get_context())
+        tools.assert_equals(302, response.status_code)
+        tools.assert_true(self.comment_list.locked())
+
+    def test_unlock_unlocks(self):
+        self.comment_list.lock()
+        response = views.unlock_comments(self.get_request(method='POST', user=self.superuser), self.get_context())
+        tools.assert_equals(302, response.status_code)
+        tools.assert_false(self.comment_list.locked())
+
+
 class TestModerateComment(ViewTestCase):
     def setUp(self):
         super(TestModerateComment, self).setUp()
         self.comment = self._get_comment()
         self.comment_list.post_comment(self.comment, None)
-        self.superuser = User.objects.create_superuser('some_OTHER_user', 'user@example.com', '!')
 
     def test_login_required(self):
         response = views.moderate_comment(self.get_request(method='POST'), self.get_context(), self.comment.pk)

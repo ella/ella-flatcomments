@@ -35,6 +35,14 @@ def comment_list(parser, token):
     return _parse_comment_tag(token.split_contents(), CommentListNode)
 
 @register.tag
+def comment_lock_status(parser, token):
+    """
+    {% comment_lock_status for <blabla> as lock_status %}
+    {% comment_lock_status for <content_type> <pk> as lock_status %}
+    """
+    return _parse_comment_tag(token.split_contents(), CommentLockStatusNode)
+
+@register.tag
 def comment_form(parser, token):
     """ {% comment_form for blabla as clist %} """
     bits = token.split_contents()
@@ -84,6 +92,11 @@ class CommentListNode(BaseCommentListNode):
         return comment_list[:comments_settings.PAGINATE_BY]
 
 
+class CommentLockStatusNode(BaseCommentListNode):
+    def value_from_comment_list(self, comment_list, context):
+        return comment_list.locked()
+
+
 class CommentFormNode(template.Node):
     def __init__(self, obj_var, form_var):
         self.obj_var = obj_var
@@ -93,6 +106,10 @@ class CommentFormNode(template.Node):
         try:
             content_object = self.obj_var.resolve(context)
         except template.VariableDoesNotExist:
+            return ''
+
+        # locked comments, no form for you!
+        if CommentList.for_object(content_object).locked():
             return ''
 
         context[self.form_var] = FlatCommentMultiForm(content_object, context['user'])

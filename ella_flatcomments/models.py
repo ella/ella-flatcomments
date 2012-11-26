@@ -30,6 +30,7 @@ class CommentList(object):
         self.ct_id = content_type.id
         self.obj_id = str(object_id)
 
+        self._id = ':'.join(map(str, (Site.objects.get_current().id, content_type.id, object_id)))
         self._key = comments_settings.LIST_KEY % (Site.objects.get_current().id, content_type.id, object_id)
         self._reversed = reversed
 
@@ -90,6 +91,9 @@ class CommentList(object):
 
         Return error boolean and reason for error, if any.
         """
+        if self.locked():
+            return False, 'Commenting is locked.'
+
         assert self._verify_own(comment)
         responses = comment_will_be_posted.send(FlatComment, comment=comment, request=request)
         for (receiver, response) in responses:
@@ -117,6 +121,15 @@ class CommentList(object):
         # remove comment from redis
         redis.lrem(self._key, comment.id)
         comment_was_moderated.send(FlatComment, comment=comment, user=user)
+
+    def locked(self):
+        return redis.sismember(comments_settings.LOCKED_KEY, self._id)
+
+    def lock(self):
+        redis.sadd(comments_settings.LOCKED_KEY, self._id)
+
+    def unlock(self):
+        redis.srem(comments_settings.LOCKED_KEY, self._id)
 
 
 class FlatComment(models.Model):

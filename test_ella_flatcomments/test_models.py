@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from ella.core.cache.utils import SKIP
 
 from ella_flatcomments.models import FlatComment, CommentList
+from ella_flatcomments.conf import comments_settings
 
 from test_ella_flatcomments.cases import CommentTestCase, PublishableTestCase
 
@@ -126,4 +127,21 @@ class TestCommentList(CommentTestCase):
         tools.assert_equals(clist[0:4], comment_list[0:4])
         tools.assert_equals(clist[2:6], comment_list[2:6])
         tools.assert_equals(clist[2:60], comment_list[2:60])
+
+    def test_lock(self):
+        self.comment_list.lock()
+        tools.assert_equals(set(('1:%s:1' % self.content_type.pk, )), self.redis.smembers(comments_settings.LOCKED_KEY))
+
+    def test_unlock(self):
+        self.redis.sadd(comments_settings.LOCKED_KEY, '1:%s:1' % self.content_type.pk)
+        self.comment_list.unlock()
+        tools.assert_equals(set(), self.redis.smembers(comments_settings.LOCKED_KEY))
+
+    def test_post_comment_fails_on_locked(self):
+        self.comment_list.lock()
+        c = self._get_comment()
+        success, reason = self.comment_list.post_comment(c, None)
+
+        tools.assert_false(success)
+        tools.assert_equals(11, self.comment_list.count())
 

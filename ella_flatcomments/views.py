@@ -43,6 +43,10 @@ def comment_detail(request, context, comment_id):
 @login_required
 def post_comment(request, context, comment_id=None):
     clist = CommentList.for_object(context['object'])
+
+    if clist.locked():
+        return TemplateResponse(request, get_template('comments_locked.html', context['object']), context, status=403)
+
     comment = None
     user = request.user
     if comment_id:
@@ -90,3 +94,21 @@ def moderate_comment(request, context, comment_id):
     if request.is_ajax():
         return HttpResponse('{"error": false}', content_type='application/json')
     return HttpResponseRedirect(url)
+
+@mod_required
+@require_POST
+def lock_comments(request, context):
+    clist = CommentList.for_object(context['object'])
+    clist.lock()
+    if request.is_ajax():
+        return HttpResponse('{"error": false}', content_type='application/json')
+    return HttpResponseRedirect(context['object'].get_absolute_url())
+
+@mod_required
+@require_POST
+def unlock_comments(request, context):
+    clist = CommentList.for_object(context['object'])
+    clist.unlock()
+    if request.is_ajax():
+        return HttpResponse('{"error": false}', content_type='application/json')
+    return HttpResponseRedirect(context['object'].get_absolute_url())
