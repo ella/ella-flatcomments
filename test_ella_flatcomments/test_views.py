@@ -46,7 +46,7 @@ class TestComment_detail(ViewTestCase):
 
     def test_redirects_to_comment_url(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
 
         response = views.comment_detail(self.get_request(), self.get_context(), str(c.pk))
 
@@ -69,7 +69,7 @@ class TestPostComment(ViewTestCase):
 
     def test_users_can_edit_their_comments(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
         response = views.post_comment(self.get_request(method='POST', user=self.user, data={'comment': 'New Comment Text!'}), self.get_context(), str(c.pk))
 
         tools.assert_equals(302, response.status_code)
@@ -80,7 +80,7 @@ class TestPostComment(ViewTestCase):
 
     def test_users_cannot_other_users_comments(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
         user = User.objects.create_user('some_OTHER_user', 'user@example.com')
 
         response = views.post_comment(self.get_request(method='POST', user=user, data={'comment': 'New Comment Text!'}), self.get_context(), str(c.pk))
@@ -91,7 +91,7 @@ class TestPostComment(ViewTestCase):
 
     def test_staff_can_edit_other_users_comments(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
         response = views.post_comment(self.get_request(method='POST', user=self.superuser, data={'comment': 'New Comment Text!'}), self.get_context(), str(c.pk))
 
         tools.assert_equals(302, response.status_code)
@@ -141,7 +141,7 @@ class TestModerateComment(ViewTestCase):
     def setUp(self):
         super(TestModerateComment, self).setUp()
         self.comment = self._get_comment()
-        self.comment_list.post_comment(self.comment, None)
+        self.comment.post()
 
     def test_login_required(self):
         response = views.moderate_comment(self.get_request(method='POST'), self.get_context(), self.comment.pk)

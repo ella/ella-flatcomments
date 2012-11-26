@@ -69,7 +69,7 @@ def post_comment(request, context, comment_id=None):
     form = FlatCommentMultiForm(context['object'], user, data=data, files=files, instance=comment)
     if form.is_valid():
         comment = form.save(commit=False)
-        success, reason = clist.post_comment(comment, request)
+        success, reason = comment.post(request)
         if not success:
             return HttpResponseForbidden(reason)
         return HttpResponseRedirect(comment.get_absolute_url(show_reversed(request)))
@@ -90,7 +90,7 @@ def moderate_comment(request, context, comment_id):
         raise Http404()
 
     url = comment.get_absolute_url()
-    clist.moderate_comment(comment, request.user)
+    comment.moderate(request.user)
     if request.is_ajax():
         return HttpResponse('{"error": false}', content_type='application/json')
     return HttpResponseRedirect(url)

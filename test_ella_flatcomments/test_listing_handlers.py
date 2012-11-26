@@ -28,7 +28,7 @@ class TestListingHandlers(PublishableTestCase):
     def test_last_commented_finds_the_publishable_with_comments_time(self):
         submit_date = datetime(2010, 10, 10)
         c = self._get_comment(submit_date=submit_date)
-        self.comment_list.post_comment(c, None)
+        c.post()
 
         lh = Listing.objects.get_queryset_wrapper(self.category_nested, source=comments_settings.LAST_COMMENTED_LH)
 

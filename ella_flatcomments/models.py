@@ -107,7 +107,7 @@ class CommentList(object):
             responses = comment_was_posted.send(FlatComment, comment=comment, request=request)
         return True, None
 
-    def moderate_comment(self, comment, user, commit=True):
+    def moderate_comment(self, comment, user=None, commit=True):
         """
         Mark some comment as moderated and fire a signal to make other apps aware of this
         """
@@ -148,7 +148,15 @@ class FlatComment(models.Model):
     app_data = AppDataField()
 
     def _comment_list(self, reversed=False):
-        return CommentList(self.content_type, self.object_id, reversed)
+        if not hasattr(self, '__comment_list'):
+            self.__comment_list = CommentList(self.content_type, self.object_id, reversed)
+        return self.__comment_list
+
+    def post(self, request=None):
+        return self._comment_list().post_comment(self, request)
+
+    def moderate(self, user=None, commit=False):
+        return self._comment_list().moderate_comment(self, user, commit)
 
     def get_absolute_url(self, reversed=False):
         return '%s?p=%d' % (
@@ -157,7 +165,7 @@ class FlatComment(models.Model):
             )
 
     def delete(self):
-        CommentList(self.content_type, self.object_id).moderate_comment(self, None, False)
+        self.moderate()
         super(FlatComment, self).delete()
 
     def save(self, **kwargs):

@@ -13,14 +13,14 @@ from mock import patch, DEFAULT
 class TestURL(PublishableTestCase):
     def test_first_comment_points_to_first_page(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
 
         tools.assert_equals(self.publishable.get_absolute_url() + 'comments/?p=1', c.get_absolute_url())
 
     def test_third_comment_on_second_page(self):
         comments = [self._get_comment() for _ in range(3)]
         for c in comments:
-            self.comment_list.post_comment(c, None)
+            c.post()
 
         tools.assert_equals(self.publishable.get_absolute_url() + 'comments/?p=2', comments[0].get_absolute_url())
         tools.assert_equals(self.publishable.get_absolute_url() + 'comments/?p=1', comments[1].get_absolute_url())
@@ -28,7 +28,7 @@ class TestURL(PublishableTestCase):
 class TestRedisDenormalizations(CommentTestCase):
     def test_comment_id_is_pushed_to_redis_list(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
 
         tools.assert_equals(['comments:1:%s:1' % self.content_type.pk], self.redis.keys('*'))
         tools.assert_equals([str(c.pk)], self.redis.lrange('comments:1:%s:1' % self.content_type.pk, 0, -1))
@@ -38,7 +38,7 @@ class TestRedisDenormalizations(CommentTestCase):
         c.save()
         self.redis.lpush('comments:1:%s:1' % self.content_type.pk, c.pk)
 
-        self.comment_list.moderate_comment(c, self.user)
+        c.moderate(self.user)
         tools.assert_equals([], self.redis.keys('*'))
 
     def test_delete_removes_comment_id_from_redis(self):
@@ -52,14 +52,14 @@ class TestRedisDenormalizations(CommentTestCase):
 class TestCommentManager(CommentTestCase):
     def test_get_comment_raises_does_not_exist_on_mismatched_content_object(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
 
         clist = CommentList.for_object(ContentType.objects.get(pk=2))
         tools.assert_raises(FlatComment.DoesNotExist, clist.get_comment, c.pk)
 
     def test_get_comment_works(self):
         c = self._get_comment()
-        self.comment_list.post_comment(c, None)
+        c.post()
 
         clist = CommentList.for_object(self.content_object)
         tools.assert_equals(c, clist.get_comment(c.pk))
@@ -140,7 +140,7 @@ class TestCommentList(CommentTestCase):
     def test_post_comment_fails_on_locked(self):
         self.comment_list.lock()
         c = self._get_comment()
-        success, reason = self.comment_list.post_comment(c, None)
+        success, reason = c.post()
 
         tools.assert_false(success)
         tools.assert_equals(11, self.comment_list.count())
