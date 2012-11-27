@@ -11,7 +11,7 @@ urlpatterns = patterns('',
     url(r'^(?P<comment_id>\d+)/%s/$' % slugify(_('update')), post_comment, name='comment-update'),
     url(r'^(?P<comment_id>\d+)/%s/$' % slugify(_('moderate')), moderate_comment, name='comment-moderate'),
 
-    url(r'^%s/$' % slugify(_('lock')), lock_comments, name='comments-lock'),
-    url(r'^%s/$' % slugify(_('unlock')), unlock_comments, name='comments-unlock'),
+    url(r'^%s/$' % slugify(_('lock')), lock_comments, name='lock-comments'),
+    url(r'^%s/$' % slugify(_('unlock')), unlock_comments, name='unlock-comments'),
 )
 

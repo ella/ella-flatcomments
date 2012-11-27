@@ -4,3 +4,5 @@ from django.contrib.comments.signals import comment_will_be_posted, comment_was_
 from django.dispatch import Signal
 
 comment_was_moderated = Signal(providing_args=['comment', 'user'])
+
+comment_updated = Signal(providing_args=['comment', 'updating_user', 'date_updated'])

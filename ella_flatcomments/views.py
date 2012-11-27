@@ -5,11 +5,13 @@ from django.views.decorators.http import require_POST
 from django.template.response import TemplateResponse
 
 from ella.core.views import get_templates_from_publishable
+from ella.utils.timezone import now
 
 from ella_flatcomments.models import CommentList, FlatComment
 from ella_flatcomments.conf import comments_settings
 from ella_flatcomments.forms import FlatCommentMultiForm
 from ella_flatcomments.utils import show_reversed
+from ella_flatcomments.signals import comment_updated
 
 mod_required = user_passes_test(comments_settings.IS_MODERATOR_FUNC)
 
@@ -18,8 +20,10 @@ def get_template(name, obj=None):
         return obj.get_templates(name)
     return get_templates_from_publishable(name, obj)
 
-def list_comments(request, context):
-    clist = CommentList.for_object(context['object'], show_reversed(request))
+def list_comments(request, context, reverse=None):
+    if reverse is None:
+        reverse = show_reversed(request)
+    clist = CommentList.for_object(context['object'], reverse)
     paginator = Paginator(clist, comments_settings.PAGINATE_BY)
     try:
         context['page'] = paginator.page(request.GET.get('p', 1))
@@ -76,6 +80,13 @@ def post_comment(request, context, comment_id=None):
         success, reason = comment.post(request)
         if not success:
             return HttpResponseForbidden(reason)
+        comment_updated.send(
+            sender=comment.__class__,
+            comment=comment,
+            updating_user=request.user,
+            date_updated=now()
+        )
+
         return HttpResponseRedirect(comment.get_absolute_url(show_reversed(request)))
 
     context.update({
