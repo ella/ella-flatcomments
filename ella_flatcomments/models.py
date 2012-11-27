@@ -47,13 +47,19 @@ class CommentList(object):
                 raise IndexError('list index out of range')
             return get_cached_object(FlatComment, pk=pk)
 
-        assert isinstance(key, slice) and isinstance(key.start, int) and isinstance(key.stop, int) and key.step is None
+        cnt = None
+        start = 0 if key.start is None else key.start
+        stop = key.stop
+        if key.stop is None:
+            stop = cnt = self.count()
+        assert isinstance(key, slice) and isinstance(start, int) and isinstance(stop, int) and key.step is None
 
         if self._reversed:
-            cnt = self.count()
-            pks = reversed(redis.lrange(self._key, cnt - key.stop, cnt - key.start - 1))
+            if cnt is None:
+                cnt = self.count()
+            pks = reversed(redis.lrange(self._key, cnt - stop, cnt - start - 1))
         else:
-            pks = redis.lrange(self._key, key.start, key.stop - 1)
+            pks = redis.lrange(self._key, start, stop - 1)
 
         return get_cached_objects(pks, model=FlatComment, missing=SKIP)
 

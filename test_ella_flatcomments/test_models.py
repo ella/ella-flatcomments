@@ -120,6 +120,8 @@ class TestCommentList(CommentTestCase):
         tools.assert_equals(clist[0:4], self.comment_list[0:4])
         tools.assert_equals(clist[2:6], self.comment_list[2:6])
         tools.assert_equals(clist[2:60], self.comment_list[2:60])
+        tools.assert_equals(clist[:3], self.comment_list[:3])
+        tools.assert_equals(clist[3:], self.comment_list[3:])
 
     def test_reversed_slice(self):
         comment_list = CommentList(self.content_type, 1, reversed=True)
@@ -127,6 +129,7 @@ class TestCommentList(CommentTestCase):
         tools.assert_equals(clist[0:4], comment_list[0:4])
         tools.assert_equals(clist[2:6], comment_list[2:6])
         tools.assert_equals(clist[2:60], comment_list[2:60])
+        tools.assert_equals(clist[3:], comment_list[3:])
 
     def test_lock(self):
         self.comment_list.lock()
