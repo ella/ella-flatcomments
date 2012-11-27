@@ -161,7 +161,7 @@ class FlatComment(models.Model):
     def post(self, request=None):
         return self._comment_list().post_comment(self, request)
 
-    def moderate(self, user=None, commit=False):
+    def moderate(self, user=None, commit=True):
         return self._comment_list().moderate_comment(self, user, commit)
 
     def get_absolute_url(self, reversed=False):
