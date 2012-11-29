@@ -58,6 +58,11 @@ class TestPostComment(ViewTestCase):
         response = views.post_comment(self.get_request(method='POST'), self.get_context())
         tools.assert_equals(302, response.status_code)
 
+    def test_honeypot_causes_post_to_fail(self):
+        response = views.post_comment(self.get_request(method='POST', user=self.user, data={'comment': 'New Comment!', 'honeypot': 'Heya'}), self.get_context())
+        tools.assert_equals(200, response.status_code)
+        tools.assert_equals(0, self.comment_list.count())
+
     def test_post_with_content_goes_through(self):
         response = views.post_comment(self.get_request(method='POST', user=self.user, data={'comment': 'New Comment!'}), self.get_context())
 
