@@ -1,7 +1,7 @@
 from django import forms
 from django.forms.models import ModelForm
 
-from app_data.forms import multiform_factory
+from app_data.forms import MultiForm
 
 from ella_flatcomments.models import FlatComment
 
@@ -35,4 +35,10 @@ class FlatCommentForm(ModelForm):
             'comment',
         )
 
-FlatCommentMultiForm = multiform_factory(FlatCommentForm)
+class FlatCommentMultiForm(MultiForm):
+    ModelForm = FlatCommentForm
+
+    def post(self):
+        comment = super(FlatCommentMultiForm, self).save(commit=False)
+        success, reason = comment.post()
+        return comment, success, reason
