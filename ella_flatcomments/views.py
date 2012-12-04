@@ -86,6 +86,7 @@ def post_comment(request, context, comment_id=None):
         )
 
         if request.is_ajax():
+            context.update({'comment': comment})
             return TemplateResponse(request, get_template('comment_detail_async.html', context['object']), context)
         return HttpResponseRedirect(comment.get_absolute_url(show_reversed(request)))
 
