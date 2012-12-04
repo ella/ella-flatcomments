@@ -15,7 +15,9 @@ from ella_flatcomments.signals import comment_updated
 
 mod_required = user_passes_test(comments_settings.IS_MODERATOR_FUNC)
 
-def get_template(name, obj=None):
+def get_template(name, obj=None, async=False):
+    if async:
+        name = '%s_async.%s' % name.rsplit('.', 1)
     if hasattr(obj, 'get_templates'):
         return obj.get_templates(name)
     return get_templates_from_publishable(name, obj)
@@ -32,10 +34,7 @@ def list_comments(request, context, reverse=None):
 
     context['comment_list'] = context['page'].object_list
     context['is_paginated'] = context['page'].has_other_pages()
-    template_name = 'comment_list.html'
-    if request.is_ajax():
-        template_name = 'comment_list_async.html'
-    return TemplateResponse(request, get_template(template_name, context['object']), context)
+    return TemplateResponse(request, get_template('comment_list.html', context['object'], request.is_ajax()), context)
 
 def comment_detail(request, context, comment_id):
     clist = CommentList.for_object(context['object'])
@@ -53,7 +52,7 @@ def post_comment(request, context, comment_id=None):
     clist = CommentList.for_object(context['object'])
 
     if clist.locked():
-        return TemplateResponse(request, get_template('comments_locked.html', context['object']), context, status=403)
+        return TemplateResponse(request, get_template('comments_locked.html', context['object'], request.is_ajax()), context, status=403)
 
     comment = None
     user = request.user
@@ -86,13 +85,15 @@ def post_comment(request, context, comment_id=None):
             date_updated=now()
         )
 
+        if request.is_ajax():
+            return TemplateResponse(request, get_template('comment_detail_async.html', context['object']), context)
         return HttpResponseRedirect(comment.get_absolute_url(show_reversed(request)))
 
     context.update({
         'comment': comment,
         'form': form
     })
-    return TemplateResponse(request, get_template('comment_form.html', context['object']), context)
+    return TemplateResponse(request, get_template('comment_form.html', context['object'], request.is_ajax()), context)
 
 @mod_required
 @require_POST
