@@ -17,7 +17,7 @@ mod_required = user_passes_test(comments_settings.IS_MODERATOR_FUNC)
 
 def get_template(name, obj=None, async=False):
     if async:
-        name = '%s_async.%s' % name.rsplit('.', 1)
+        name = '%s_async.%s' % tuple(name.rsplit('.', 1))
     if hasattr(obj, 'get_templates'):
         return obj.get_templates(name)
     return get_templates_from_publishable(name, obj)
