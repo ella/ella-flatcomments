@@ -5,7 +5,10 @@ from django.contrib.comments.signals import comment_was_posted
 
 from threadedcomments.models import ThreadedComment
 
+from ella.core.models import Listing
+
 from ella_flatcomments.utils import migrate_legacy_comments
+from ella_flatcomments.conf import comments_settings
 
 from nose import tools
 
@@ -47,3 +50,7 @@ class TestMigrations(PublishableTestCase):
         c = self.comment_list.last_comment()
         tools.assert_equals('9th', c.comment)
 
+    def test_listing_handlers_filled_during_migration(self):
+        migrate_legacy_comments()
+        lh = Listing.objects.get_queryset_wrapper(self.category_nested, source=comments_settings.MOST_COMMENTED_LH)
+        tools.assert_equals(1, lh.count())

@@ -18,6 +18,7 @@ def disconnect_legacy_signals():
     content_unpublished.disconnect(publishable_unpublished)
 
 def migrate_legacy_comments():
+    from ella_flatcomments.register import comment_posted
     CommentModel = comments.get_model()
     if not CommentModel._meta.installed:
         return
@@ -36,6 +37,8 @@ def migrate_legacy_comments():
             is_public=c.is_public and not c.is_removed,
         )
 
-        fc.post()
+        fc.post(quiet=True)
+        if fc.is_public:
+            comment_posted(fc)
         cnt += 1
     return cnt

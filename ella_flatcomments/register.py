@@ -30,7 +30,7 @@ def comment_moderated(comment, user, **kwargs):
         publishable_published(obj, delta=-1)
 
 
-def comment_posted(comment, request, **kwargs):
+def comment_posted(comment, **kwargs):
     # update the listing handlers
     obj = comment.content_object
     if isinstance(obj, Publishable) and obj.is_published():
