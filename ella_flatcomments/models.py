@@ -90,7 +90,7 @@ class CommentList(object):
             raise FlatComment.DoesNotExist()
         return c
 
-    def post_comment(self, comment, request=None, quiet=False):
+    def post_comment(self, comment, request=None):
         """
         Post comment, fire of all the signals connected to that event and see
         if any receiver shut the posting down.
@@ -101,18 +101,16 @@ class CommentList(object):
             return False, 'Commenting is locked.'
 
         assert self._verify_own(comment)
-        if not quiet:
-            responses = comment_will_be_posted.send(FlatComment, comment=comment, request=request)
-            for (receiver, response) in responses:
-                if response == False:
-                    return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
+        responses = comment_will_be_posted.send(FlatComment, comment=comment, request=request)
+        for (receiver, response) in responses:
+            if response == False:
+                return False, "comment_will_be_posted receiver %r killed the comment" % receiver.__name__
         new = not bool(comment.pk)
         comment.save()
         if new and comment.is_public:
             # add comment to redis
             redis.lpush(self._key, comment.id)
-            if not quiet:
-                responses = comment_was_posted.send(FlatComment, comment=comment, request=request)
+            comment_was_posted.send(FlatComment, comment=comment, request=request)
         return True, None
 
     def moderate_comment(self, comment, user=None, commit=True):
@@ -160,8 +158,8 @@ class FlatComment(models.Model):
             self.__comment_list = CommentList(self.content_type, self.object_id, reversed)
         return self.__comment_list
 
-    def post(self, request=None, quiet=False):
-        return self._comment_list().post_comment(self, request, quiet)
+    def post(self, request=None):
+        return self._comment_list().post_comment(self, request)
 
     def moderate(self, user=None, commit=True):
         return self._comment_list().moderate_comment(self, user, commit)

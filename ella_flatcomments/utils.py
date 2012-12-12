@@ -1,6 +1,6 @@
 from django.contrib import comments
 
-from ella_flatcomments.models import FlatComment
+from ella_flatcomments.models import FlatComment, redis
 
 def show_reversed(request):
     reverse = False
@@ -26,6 +26,7 @@ def migrate_legacy_comments():
     cnt = 0
     for c in CommentModel.objects.exclude(user__isnull=True).order_by('submit_date').iterator():
         fc = FlatComment(
+            id=c.pk,
             site_id=c.site_id,
             content_type_id=c.content_type_id,
             object_id=c.object_pk,
@@ -37,8 +38,9 @@ def migrate_legacy_comments():
             is_public=c.is_public and not c.is_removed,
         )
 
-        fc.post(quiet=True)
+        fc.save(force_insert=True)
         if fc.is_public:
+            redis.lpush(fc._comment_list()._key, c.pk)
             comment_posted(fc)
         cnt += 1
     return cnt
