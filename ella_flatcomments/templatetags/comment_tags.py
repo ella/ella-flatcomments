@@ -112,7 +112,8 @@ class CommentFormNode(template.Node):
         if CommentList.for_object(content_object).locked():
             return ''
 
-        context[self.form_var] = FlatCommentMultiForm(content_object, context['user'])
+        if context['user'].is_authenticated():
+            context[self.form_var] = FlatCommentMultiForm(content_object, context['user'])
         return ''
 
 
