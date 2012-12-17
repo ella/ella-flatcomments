@@ -40,6 +40,11 @@ class TestCommentList(ViewTestCase):
     def test_raises_404_on_invalid_page(self):
         tools.assert_raises(Http404, views.list_comments, self.get_request(data={'p': 'not a number'}), self.get_context())
 
+    def test_displays_last_page_on_request(self):
+        response = views.list_comments(self.get_request(data={'p': 'last'}), self.get_context())
+
+        tools.assert_equals([], response.context_data['comment_list'])
+
 class TestComment_detail(ViewTestCase):
     def test_raises_404_on_missing_comment(self):
         tools.assert_raises(Http404, views.comment_detail, self.get_request(), self.get_context(), 1)

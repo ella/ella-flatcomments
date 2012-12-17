@@ -28,7 +28,11 @@ def list_comments(request, context, reverse=None):
     clist = CommentList.for_object(context['object'], reverse)
     paginator = Paginator(clist, comments_settings.PAGINATE_BY)
     try:
-        context['page'] = paginator.page(request.GET.get('p', 1))
+        p = request.GET.get('p', 1)
+        if p == 'last':
+            context['page'] = paginator.page(paginator.num_pages)
+        else:
+            context['page'] = paginator.page(p)
     except (PageNotAnInteger, EmptyPage):
         raise Http404()
 
