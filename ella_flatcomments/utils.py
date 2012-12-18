@@ -1,4 +1,5 @@
 from django.contrib import comments
+from django.db.models import Max
 
 from ella_flatcomments.models import FlatComment, redis
 
@@ -23,8 +24,9 @@ def migrate_legacy_comments():
     if not CommentModel._meta.installed:
         return
 
+    migrated_id = FlatComment.objects.all().aggregate(Max('id'))['id__max'] or 0
     cnt = 0
-    for c in CommentModel.objects.exclude(user__isnull=True).order_by('submit_date').iterator():
+    for c in CommentModel.objects.exclude(user__isnull=True).order_by('id').filter(id__gt=migrated_id).iterator():
         fc = FlatComment(
             id=c.pk,
             site_id=c.site_id,
