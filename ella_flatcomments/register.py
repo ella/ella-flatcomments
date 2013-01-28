@@ -5,6 +5,7 @@ from ella.core.models import Listing, Publishable
 from ella.core.cache.redis import SlidingListingHandler
 from ella.core.signals import content_published, content_unpublished
 from ella.core.custom_urls import resolver
+from ella.core.cache.utils import invalidate_cache_for_object
 
 from ella_flatcomments.urls import urlpatterns
 from ella_flatcomments.conf import comments_settings
@@ -28,6 +29,8 @@ def comment_moderated(comment, user, **kwargs):
     obj = comment.content_object
     if isinstance(obj, Publishable) and obj.is_published():
         publishable_published(obj, delta=-1)
+    # invalidate the objects boxes
+    invalidate_cache_for_object(obj)
 
 
 def comment_posted(comment, **kwargs):
@@ -35,6 +38,8 @@ def comment_posted(comment, **kwargs):
     obj = comment.content_object
     if isinstance(obj, Publishable) and obj.is_published():
         publishable_published(obj, delta=1)
+    # invalidate the objects boxes
+    invalidate_cache_for_object(obj)
 
 
 def publishable_unpublished(publishable, **kwargs):
