@@ -2,7 +2,7 @@
 nose
 coverage
 mock
-PIL
+Pillow
 
 # for testing migrations:
 git+https://github.com/HonzaKral/django-threadedcomments.git#egg=django-threadedcomments
