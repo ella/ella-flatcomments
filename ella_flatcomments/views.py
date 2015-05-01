@@ -79,7 +79,7 @@ def post_comment(request, context, comment_id=None):
 
     form = FlatCommentMultiForm(context['object'], user, data=data, files=files, instance=comment)
     if form.is_valid():
-        comment, success, reason = form.post()
+        comment, success, reason = form.post(request)
         if not success:
             return HttpResponseForbidden(reason)
         comment_updated.send(

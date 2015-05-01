@@ -38,7 +38,7 @@ class FlatCommentForm(ModelForm):
 class FlatCommentMultiForm(MultiForm):
     ModelForm = FlatCommentForm
 
-    def post(self):
+    def post(self, request=None):
         comment = super(FlatCommentMultiForm, self).save(commit=False)
-        success, reason = comment.post()
+        success, reason = comment.post(request)
         return comment, success, reason
