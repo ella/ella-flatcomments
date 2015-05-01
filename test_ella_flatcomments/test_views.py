@@ -4,6 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import User
 
 from ella_flatcomments import views
+from ella_flatcomments.signals import comment_was_posted
 
 from nose import tools
 
@@ -59,6 +60,18 @@ class TestComment_detail(ViewTestCase):
         tools.assert_equals(c.get_absolute_url(), response['Location'])
 
 class TestPostComment(ViewTestCase):
+    def setUp(self):
+        super(TestPostComment, self).setUp()
+        comment_was_posted.connect(self._comment_posted)
+        self._posted = []
+
+    def tearDown(self):
+        super(TestPostComment, self).tearDown()
+        comment_was_posted.disconnect(self._comment_posted)
+
+    def _comment_posted(self, *args, **kwargs):
+        self._posted.append((args, kwargs))
+
     def test_login_required(self):
         response = views.post_comment(self.get_request(method='POST'), self.get_context())
         tools.assert_equals(302, response.status_code)
@@ -69,13 +82,19 @@ class TestPostComment(ViewTestCase):
         tools.assert_equals(0, self.comment_list.count())
 
     def test_post_with_content_goes_through(self):
-        response = views.post_comment(self.get_request(method='POST', user=self.user, data={'comment': 'New Comment!'}), self.get_context())
+        req = self.get_request(method='POST', user=self.user, data={'comment': 'New Comment!'})
+        response = views.post_comment(req, self.get_context())
 
         tools.assert_equals(302, response.status_code)
         tools.assert_equals(1, self.comment_list.count())
         c = self.comment_list.last_comment()
         tools.assert_equals(c.get_absolute_url(), response['Location'])
         tools.assert_equals(c.comment, 'New Comment!')
+        tools.assert_equals(1, len(self._posted))
+        
+        args, kwargs = self._posted[0]
+        tools.assert_equals(req, kwargs['request'])
+
 
     def test_users_can_edit_their_comments(self):
         c = self._get_comment()
